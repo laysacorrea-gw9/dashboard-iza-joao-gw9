@@ -1,0 +1,17 @@
+screenshots/
+__pycache__/
+*.pyc
+.venv/
+.env
+inspecionar_dash.py
+evolucao_orcamento.py
+expandir_categorias.py
+gerar_base.py
+baixar_planfi.py
+base_extratos_completa.csv
+transacoes_filtradas_2026-04-08_19-22_Planfi_2026.csv
+Izabella_transacoes_filtradas_2026-05-04_16-18.csv
+Izabella_transacoes_filtradas_2026-05-04_16-26.csv
+Izabella_transacoes_filtradas_2026-05-04_16-56.csv
+Izabella_transacoes_filtradas_2026-05-04_19-54.csv
+Izabella_transacoes_filtradas_2026-05-04_20-55.csv
