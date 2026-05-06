@@ -557,15 +557,15 @@ st.title(":material/account_balance_wallet: Finanças de vocês, Iza & João")
 
 def card_html(bg, shadow, icon, label, value, extra=""):
     return f"""
-    <div style="background:{bg}; border-radius:20px; padding:22px 14px;
-         box-shadow:0 10px 30px {shadow}; color:white; margin-bottom:8px;
-         min-height:280px; height:100%; box-sizing:border-box;
+    <div style="background:{bg}; border-radius:18px; padding:16px 12px;
+         box-shadow:0 8px 24px {shadow}; color:white; margin-bottom:6px;
+         min-height:220px; height:100%; box-sizing:border-box;
          display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
       <div style="background:rgba(255,255,255,0.25); border-radius:50%;
-           width:42px; height:42px; display:flex; align-items:center;
-           justify-content:center; font-size:1.3rem; margin-bottom:10px;">{icon}</div>
-      <div style="font-size:0.95rem; opacity:0.9; font-weight:600; letter-spacing:0.3px; margin-bottom:4px;">{label}</div>
-      <div style="font-size:1.55rem; font-weight:800; line-height:1.15; letter-spacing:-0.5px; white-space:nowrap;">{value}</div>
+           width:36px; height:36px; display:flex; align-items:center;
+           justify-content:center; font-size:1.1rem; margin-bottom:8px;">{icon}</div>
+      <div style="font-size:0.9rem; opacity:0.9; font-weight:600; letter-spacing:0.3px; margin-bottom:4px;">{label}</div>
+      <div style="font-size:1.45rem; font-weight:800; line-height:1.15; letter-spacing:-0.5px; white-space:nowrap;">{value}</div>
       {extra}
     </div>"""
 
@@ -894,35 +894,35 @@ elif pagina == "mes":
     <div style="display:flex; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
       <div style="flex:1 1 140px;">{card_html("#00b894", "rgba(0,184,148,0.35)", "↑", "Entradas", fmt_brl(entrou))}</div>
       <div style="flex:2 1 300px;">
-        <div style="background:#e17055; border-radius:20px; padding:22px 18px;
-             box-shadow:0 10px 30px rgba(225,112,85,0.35); color:white; margin-bottom:8px;
-             min-height:280px; height:100%; box-sizing:border-box;
+        <div style="background:#e17055; border-radius:18px; padding:14px 14px;
+             box-shadow:0 8px 24px rgba(225,112,85,0.35); color:white; margin-bottom:6px;
+             min-height:220px; height:100%; box-sizing:border-box;
              display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
-          <div style="display:flex; align-items:center; gap:14px; justify-content:center;">
+          <div style="display:flex; align-items:center; gap:12px; justify-content:center;">
             <div style="background:rgba(255,255,255,0.25); border-radius:50%;
-                 width:46px; height:46px; display:flex; align-items:center;
-                 justify-content:center; font-size:1.4rem; flex-shrink:0;">↓</div>
+                 width:38px; height:38px; display:flex; align-items:center;
+                 justify-content:center; font-size:1.15rem; flex-shrink:0;">↓</div>
             <div style="text-align:left;">
-              <div style="font-size:1rem; opacity:0.9; font-weight:600; letter-spacing:0.3px;">Saídas</div>
-              <div style="font-size:1.85rem; font-weight:800; line-height:1.1; letter-spacing:-0.5px; white-space:nowrap;">{fmt_brl(saiu)}</div>
+              <div style="font-size:0.9rem; opacity:0.9; font-weight:600; letter-spacing:0.3px;">Saídas</div>
+              <div style="font-size:1.55rem; font-weight:800; line-height:1.1; letter-spacing:-0.5px; white-space:nowrap;">{fmt_brl(saiu)}</div>
             </div>
           </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:16px; width:100%;">
-            <div style="background:rgba(255,255,255,0.22); border-radius:12px; padding:10px 8px; text-align:center;">
-              <div style="font-size:0.78rem; opacity:0.95; margin-bottom:4px; font-weight:600;">🔒 Essencial</div>
-              <div style="font-size:1.05rem; font-weight:800; line-height:1.1; white-space:nowrap;">{fmt_brl(desp_fixas_mes)}</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:10px; width:100%;">
+            <div style="background:rgba(255,255,255,0.22); border-radius:10px; padding:7px 6px; text-align:center;">
+              <div style="font-size:0.72rem; opacity:0.95; margin-bottom:2px; font-weight:600;">🔒 Essencial</div>
+              <div style="font-size:0.92rem; font-weight:800; line-height:1.1; white-space:nowrap;">{fmt_brl(desp_fixas_mes)}</div>
             </div>
-            <div style="background:rgba(255,255,255,0.22); border-radius:12px; padding:10px 8px; text-align:center;">
-              <div style="font-size:0.78rem; opacity:0.95; margin-bottom:4px; font-weight:600;">🔄 Não-Essen.</div>
-              <div style="font-size:1.05rem; font-weight:800; line-height:1.1; white-space:nowrap;">{fmt_brl(desp_var_mes)}</div>
+            <div style="background:rgba(255,255,255,0.22); border-radius:10px; padding:7px 6px; text-align:center;">
+              <div style="font-size:0.72rem; opacity:0.95; margin-bottom:2px; font-weight:600;">🔄 Não-Essen.</div>
+              <div style="font-size:0.92rem; font-weight:800; line-height:1.1; white-space:nowrap;">{fmt_brl(desp_var_mes)}</div>
             </div>
-            <div style="background:rgba(255,255,255,0.22); border-radius:12px; padding:10px 8px; text-align:center;">
-              <div style="font-size:0.78rem; opacity:0.95; margin-bottom:4px; font-weight:600;">📦 Eventual</div>
-              <div style="font-size:1.05rem; font-weight:800; line-height:1.1; white-space:nowrap;">{fmt_brl(desp_event_mes)}</div>
+            <div style="background:rgba(255,255,255,0.22); border-radius:10px; padding:7px 6px; text-align:center;">
+              <div style="font-size:0.72rem; opacity:0.95; margin-bottom:2px; font-weight:600;">📦 Eventual</div>
+              <div style="font-size:0.92rem; font-weight:800; line-height:1.1; white-space:nowrap;">{fmt_brl(desp_event_mes)}</div>
             </div>
-            <div style="background:rgba(255,255,255,0.22); border-radius:12px; padding:10px 8px; text-align:center;">
-              <div style="font-size:0.78rem; opacity:0.95; margin-bottom:4px; font-weight:600;">❓ Outros</div>
-              <div style="font-size:1.05rem; font-weight:800; line-height:1.1; white-space:nowrap;">{fmt_brl(desp_outros_mes)}</div>
+            <div style="background:rgba(255,255,255,0.22); border-radius:10px; padding:7px 6px; text-align:center;">
+              <div style="font-size:0.72rem; opacity:0.95; margin-bottom:2px; font-weight:600;">❓ Outros</div>
+              <div style="font-size:0.92rem; font-weight:800; line-height:1.1; white-space:nowrap;">{fmt_brl(desp_outros_mes)}</div>
             </div>
           </div>
         </div>
