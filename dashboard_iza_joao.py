@@ -483,19 +483,15 @@ st.title(":material/account_balance_wallet: Finanças de vocês, Iza & João")
 
 def card_html(bg, shadow, icon, label, value, extra=""):
     return f"""
-    <div style="background:{bg}; border-radius:20px; padding:24px 18px;
+    <div style="background:{bg}; border-radius:20px; padding:22px 14px;
          box-shadow:0 10px 30px {shadow}; color:white; margin-bottom:8px;
          min-height:200px; box-sizing:border-box;
          display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
-      <div style="display:flex; align-items:center; gap:12px; justify-content:center; min-width:0; flex-wrap:wrap;">
-        <div style="background:rgba(255,255,255,0.25); border-radius:50%;
-             width:46px; height:46px; display:flex; align-items:center;
-             justify-content:center; font-size:1.4rem; flex-shrink:0;">{icon}</div>
-        <div style="min-width:0;">
-          <div style="font-size:0.95rem; opacity:0.9; font-weight:600; letter-spacing:0.3px;">{label}</div>
-          <div style="font-size:1.7rem; font-weight:800; line-height:1.15; letter-spacing:-0.5px;">{value}</div>
-        </div>
-      </div>
+      <div style="background:rgba(255,255,255,0.25); border-radius:50%;
+           width:42px; height:42px; display:flex; align-items:center;
+           justify-content:center; font-size:1.3rem; margin-bottom:10px;">{icon}</div>
+      <div style="font-size:0.95rem; opacity:0.9; font-weight:600; letter-spacing:0.3px; margin-bottom:4px;">{label}</div>
+      <div style="font-size:1.55rem; font-weight:800; line-height:1.15; letter-spacing:-0.5px; white-space:nowrap;">{value}</div>
       {extra}
     </div>"""
 
@@ -824,20 +820,20 @@ elif pagina == "mes":
     <div style="display:flex; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
       <div style="flex:1 1 140px;">{card_html("#00b894", "rgba(0,184,148,0.35)", "↑", "Entradas", fmt_brl(entrou))}</div>
       <div style="flex:2 1 300px;">
-        <div style="background:#e17055; border-radius:20px; padding:22px 22px;
+        <div style="background:#e17055; border-radius:20px; padding:22px 18px;
              box-shadow:0 10px 30px rgba(225,112,85,0.35); color:white; margin-bottom:8px;
              min-height:200px; box-sizing:border-box;
              display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
-          <div style="display:flex; align-items:center; gap:14px; justify-content:center; flex-wrap:wrap;">
+          <div style="display:flex; align-items:center; gap:14px; justify-content:center;">
             <div style="background:rgba(255,255,255,0.25); border-radius:50%;
-                 width:50px; height:50px; display:flex; align-items:center;
-                 justify-content:center; font-size:1.5rem; flex-shrink:0;">↓</div>
-            <div>
-              <div style="font-size:1.05rem; opacity:0.9; font-weight:600; letter-spacing:0.3px;">Saídas</div>
-              <div style="font-size:2rem; font-weight:800; line-height:1.1; letter-spacing:-0.5px;">{fmt_brl(saiu)}</div>
+                 width:46px; height:46px; display:flex; align-items:center;
+                 justify-content:center; font-size:1.4rem; flex-shrink:0;">↓</div>
+            <div style="text-align:left;">
+              <div style="font-size:1rem; opacity:0.9; font-weight:600; letter-spacing:0.3px;">Saídas</div>
+              <div style="font-size:1.85rem; font-weight:800; line-height:1.1; letter-spacing:-0.5px; white-space:nowrap;">{fmt_brl(saiu)}</div>
             </div>
           </div>
-          <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:18px; width:100%;">
+          <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:16px; width:100%;">
             <div style="flex:1 1 80px; background:rgba(255,255,255,0.22); border-radius:12px; padding:12px 6px; text-align:center; min-width:0;">
               <div style="font-size:0.78rem; opacity:0.95; margin-bottom:6px; font-weight:600;">🔒 Essencial</div>
               <div style="font-size:1.1rem; font-weight:800; line-height:1.1;">{fmt_brl(desp_fixas_mes)}</div>
