@@ -1021,26 +1021,14 @@ elif pagina == "mes":
                 st.plotly_chart(fig_pizza, use_container_width=True)
 
             with col_leg:
-                # Legenda estilo Planfi: dot + nome + % + valor
-                legenda_html = '<div style="padding:6px 0;">'
+                # Legenda estilo Planfi: dot + nome + % + valor (HTML em linha unica pra Streamlit nao tratar como code block)
+                linhas = []
                 for i, (nome, valor) in enumerate(zip(nomes_pizza, valores_pizza)):
                     pct = valor / total_desp * 100
                     cor = cores_pizza[i]
-                    legenda_html += f"""
-                    <div style="display:flex; align-items:center; padding:6px 0; border-bottom:1px solid #f0edff;">
-                        <span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:{cor}; margin-right:10px; flex-shrink:0;"></span>
-                        <span style="flex:1; font-size:0.92rem; color:#2d3436; font-weight:500;">{nome}</span>
-                        <span style="font-size:0.85rem; color:#636e72; font-weight:600; margin-right:12px; min-width:48px; text-align:right;">{pct:.1f}%</span>
-                        <span style="font-size:0.92rem; color:#e74c3c; font-weight:700; min-width:90px; text-align:right;">−{fmt_brl(valor)}</span>
-                    </div>
-                    """
-                legenda_html += f"""
-                <div style="display:flex; align-items:center; padding:12px 0 6px; border-top:2px solid #2d3436; margin-top:6px;">
-                    <span style="flex:1; font-size:1rem; color:#2d3436; font-weight:800;">Total</span>
-                    <span style="font-size:1rem; color:#e74c3c; font-weight:800;">−{fmt_brl(total_desp)}</span>
-                </div>
-                </div>
-                """
+                    linhas.append(f'<div style="display:flex;align-items:center;padding:7px 0;border-bottom:1px solid #f0edff;"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:{cor};margin-right:10px;flex-shrink:0;"></span><span style="flex:1;font-size:0.92rem;color:#2d3436;font-weight:500;">{nome}</span><span style="font-size:0.85rem;color:#636e72;font-weight:600;margin-right:12px;min-width:48px;text-align:right;">{pct:.1f}%</span><span style="font-size:0.92rem;color:#e74c3c;font-weight:700;min-width:90px;text-align:right;">−{fmt_brl(valor)}</span></div>')
+                linhas.append(f'<div style="display:flex;align-items:center;padding:12px 0 6px;border-top:2px solid #2d3436;margin-top:6px;"><span style="flex:1;font-size:1rem;color:#2d3436;font-weight:800;">Total</span><span style="font-size:1rem;color:#e74c3c;font-weight:800;">−{fmt_brl(total_desp)}</span></div>')
+                legenda_html = '<div style="padding:6px 0;">' + ''.join(linhas) + '</div>'
                 st.markdown(legenda_html, unsafe_allow_html=True)
 
                 # Filtros logo abaixo da legenda
