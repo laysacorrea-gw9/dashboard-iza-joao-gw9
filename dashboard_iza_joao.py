@@ -13,7 +13,7 @@ st.set_page_config(
     page_title="Finanças - Iza & João",
     page_icon=":material/account_balance_wallet:",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="auto"  # auto = collapsa no mobile, expandida no desktop
 )
 
 MESES_PT = {
@@ -78,15 +78,32 @@ st.markdown("""
     section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] { background-color: transparent !important; }
     .stSelectbox > label, .stMultiSelect > label { font-size: 14px; font-weight: 600; }
 
-    /* Esconder o botao de collapse da sidebar do Streamlit que renderiza "keyboard_double_arrow_left" como texto */
-    [data-testid="stSidebarCollapseButton"],
-    [data-testid="stSidebarCollapsedControl"],
-    button[kind="headerNoPadding"][aria-label*="sidebar" i],
-    button[data-testid="baseButton-headerNoPadding"] { display: none !important; }
+    /* Substituir texto cru do botao de collapse da sidebar (quando Material Symbols nao carrega)
+       O Streamlit renderiza "keyboard_double_arrow_left" como texto se a fonte falha. */
+    [data-testid="stSidebarCollapseButton"] span.material-symbols-rounded,
+    [data-testid="stSidebarCollapsedControl"] span.material-symbols-rounded {
+        font-size: 0 !important;
+    }
+    [data-testid="stSidebarCollapseButton"] span.material-symbols-rounded::before {
+        content: "\\00ab" !important; /* « */
+        font-size: 22px !important;
+        font-family: Inter, sans-serif !important;
+        font-weight: 700 !important;
+        color: #a0b4f0 !important;
+    }
+    [data-testid="stSidebarCollapsedControl"] span.material-symbols-rounded::before {
+        content: "\\00bb" !important; /* » */
+        font-size: 22px !important;
+        font-family: Inter, sans-serif !important;
+        font-weight: 700 !important;
+        color: #2d2d3a !important;
+    }
 
-    /* Garantir que material symbols carregam */
-    @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
-    @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap');
+    /* Fallback geral pra qualquer texto de Material Symbol que vaze como string */
+    span.material-symbols-rounded { font-family: 'Material Symbols Rounded', 'Material Icons', sans-serif !important; }
+
+    /* Esconder o "uploadUpload" duplicado do FileUploader em mobile */
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] button[kind="secondary"] span:nth-of-type(2) { display: none !important; }
 </style>
 """, unsafe_allow_html=True)
 
