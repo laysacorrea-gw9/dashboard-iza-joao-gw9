@@ -875,94 +875,105 @@ elif pagina == "mes":
     if 'filtro_cat_pizza' not in st.session_state:
         st.session_state.filtro_cat_pizza = None
 
-    col_desp, col_rec = st.columns(2)
+    # ========== SECAO DESPESAS (full-width: donut + legenda + filtros) ==========
+    with st.container(border=True):
+        st.subheader(":material/pie_chart: Pra onde foi o dinheiro")
 
-    with col_desp:
-        with st.container(border=True):
-            st.subheader(":material/pie_chart: Pra onde foi o dinheiro")
+        desp_cat = despesas_mes.groupby('Categoria_Mae')['Valor_num'].sum().sort_values(ascending=False)
+        if 'Outros' in desp_cat.index:
+            outros_val = desp_cat.get('Outros', 0)
+            if outros_val > 0:
+                desp_cat = desp_cat.rename(index={'Outros': '⚠️ A Categorizar'})
+        total_desp = desp_cat.sum()
 
-            desp_cat = despesas_mes.groupby('Categoria_Mae')['Valor_num'].sum().sort_values(ascending=False)
-            # Destacar A Categorizar
-            if 'Outros' in desp_cat.index:
-                outros_val = desp_cat.get('Outros', 0)
-                if outros_val > 0:
-                    desp_cat = desp_cat.rename(index={'Outros': '⚠️ A Categorizar'})
-            total_desp = desp_cat.sum()
+        if total_desp > 0:
+            desp_pct = desp_cat / total_desp * 100
+            principais = desp_pct[desp_pct >= 1.5]
+            outros = desp_pct[desp_pct < 1.5]
 
-            if total_desp > 0:
-                desp_pct = desp_cat / total_desp * 100
-                # Threshold mais baixo (1.5%) para mostrar mais categorias separadamente
-                principais = desp_pct[desp_pct >= 1.5]
-                outros = desp_pct[desp_pct < 1.5]
+            valores_pizza = list(desp_cat[principais.index].values)
+            nomes_pizza = list(principais.index)
+            st.session_state.pizza_cats_principais = list(principais.index)
 
-                valores_pizza = list(desp_cat[principais.index].values)
-                nomes_pizza = list(principais.index)
-                st.session_state.pizza_cats_principais = list(principais.index)
+            if len(outros) > 0:
+                valores_pizza.append(desp_cat[outros.index].sum())
+                nomes_pizza.append(f'Outros ({len(outros)} cat.)')
 
-                if len(outros) > 0:
-                    valores_pizza.append(desp_cat[outros.index].sum())
-                    nomes_pizza.append(f'Outros ({len(outros)} cat.)')
+            cores = ['#6c5ce7', '#00b894', '#fd79a8', '#fdcb6e', '#e17055',
+                     '#74b9ff', '#a29bfe', '#55efc4', '#fab1a0', '#00cec9',
+                     '#b2bec3', '#636e72', '#e84393', '#0984e3', '#dfe6e9']
 
-                cores = ['#6c5ce7', '#00b894', '#fd79a8', '#fdcb6e', '#e17055',
-                         '#74b9ff', '#a29bfe', '#55efc4', '#fab1a0', '#00cec9',
-                         '#b2bec3', '#636e72', '#e84393', '#0984e3', '#dfe6e9']
+            cores_pizza = []
+            pull_pizza = []
+            for i, nome in enumerate(nomes_pizza):
+                if '⚠️' in nome:
+                    cores_pizza.append('#FFD600')
+                    pull_pizza.append(0.12)
+                else:
+                    cores_pizza.append(cores[i % len(cores)])
+                    pull_pizza.append(0)
 
-                cores_pizza = []
-                pull_pizza = []
-                for i, nome in enumerate(nomes_pizza):
-                    if '⚠️' in nome:
-                        cores_pizza.append('#FFD600')
-                        pull_pizza.append(0.12)
-                    else:
-                        cores_pizza.append(cores[i % len(cores)])
-                        pull_pizza.append(0)
+            # Layout horizontal: donut esquerda, legenda+filtros direita
+            col_donut, col_leg = st.columns([1.2, 1])
 
+            with col_donut:
                 fig_pizza = go.Figure()
                 fig_pizza.add_trace(go.Pie(
                     labels=nomes_pizza,
                     values=valores_pizza,
-                    hole=0.42,
-                    texttemplate='<b>%{label}</b><br>%{customdata}',
-                    textposition='outside',
-                    textfont=dict(size=13, color='#2d3436'),
-                    marker=dict(colors=cores_pizza, line=dict(width=2, color='white')),
-                    pull=pull_pizza,
-                    customdata=[fmt_brl(v) for v in valores_pizza],
-                    hovertemplate='<b>%{label}</b><br>%{percent:.1%}<br>%{customdata}<extra></extra>',
-                    showlegend=False,
-                ))
-
-                fig_pizza.add_trace(go.Pie(
-                    labels=nomes_pizza,
-                    values=valores_pizza,
-                    hole=0.42,
+                    hole=0.55,
                     texttemplate='<b>%{percent:.1%}</b>',
                     textposition='inside',
                     insidetextorientation='horizontal',
-                    textfont=dict(size=18, color='#2d3436'),
-                    marker=dict(colors=['rgba(0,0,0,0)'] * len(nomes_pizza), line=dict(width=0, color='rgba(0,0,0,0)')),
-                    hoverinfo='skip',
+                    textfont=dict(size=14, color='white'),
+                    marker=dict(colors=cores_pizza, line=dict(width=2, color='white')),
+                    pull=pull_pizza,
+                    hovertemplate='<b>%{label}</b><br>%{percent:.1%}<br>%{customdata}<extra></extra>',
+                    customdata=[fmt_brl(v) for v in valores_pizza],
                     showlegend=False,
                 ))
 
                 fig_pizza.update_layout(
-                    height=560,
-                    margin=dict(t=70, b=70, l=80, r=80),
+                    height=440,
+                    margin=dict(t=20, b=20, l=10, r=10),
                     showlegend=False,
-                    uniformtext=dict(minsize=11, mode='hide'),
-                    annotations=[dict(text=f'<b>{fmt_brl(saiu)}</b>', x=0.5, y=0.5, font_size=18, showarrow=False)],
+                    annotations=[
+                        dict(text='<b>Total</b>', x=0.5, y=0.56, font_size=13, font_color='#999', showarrow=False),
+                        dict(text=f'<b>{fmt_brl(saiu)}</b>', x=0.5, y=0.46, font_size=18, font_color='#2d3436', showarrow=False),
+                    ],
                     paper_bgcolor='rgba(0,0,0,0)',
                     plot_bgcolor='rgba(0,0,0,0)',
                 )
-
                 st.plotly_chart(fig_pizza, use_container_width=True)
 
-                # Botões clicáveis por categoria (abaixo da pizza)
-                st.caption("Clique para filtrar os lançamentos:")
-                n_cols = min(4, len(nomes_pizza))
+            with col_leg:
+                # Legenda estilo Planfi: dot + nome + % + valor
+                legenda_html = '<div style="padding:6px 0;">'
+                for i, (nome, valor) in enumerate(zip(nomes_pizza, valores_pizza)):
+                    pct = valor / total_desp * 100
+                    cor = cores_pizza[i]
+                    legenda_html += f"""
+                    <div style="display:flex; align-items:center; padding:6px 0; border-bottom:1px solid #f0edff;">
+                        <span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:{cor}; margin-right:10px; flex-shrink:0;"></span>
+                        <span style="flex:1; font-size:0.92rem; color:#2d3436; font-weight:500;">{nome}</span>
+                        <span style="font-size:0.85rem; color:#636e72; font-weight:600; margin-right:12px; min-width:48px; text-align:right;">{pct:.1f}%</span>
+                        <span style="font-size:0.92rem; color:#e74c3c; font-weight:700; min-width:90px; text-align:right;">−{fmt_brl(valor)}</span>
+                    </div>
+                    """
+                legenda_html += f"""
+                <div style="display:flex; align-items:center; padding:12px 0 6px; border-top:2px solid #2d3436; margin-top:6px;">
+                    <span style="flex:1; font-size:1rem; color:#2d3436; font-weight:800;">Total</span>
+                    <span style="font-size:1rem; color:#e74c3c; font-weight:800;">−{fmt_brl(total_desp)}</span>
+                </div>
+                </div>
+                """
+                st.markdown(legenda_html, unsafe_allow_html=True)
+
+                # Filtros logo abaixo da legenda
+                st.markdown('<div style="margin-top:14px; font-size:0.85rem; color:#636e72; font-weight:600;">Clique para filtrar os lançamentos:</div>', unsafe_allow_html=True)
+                n_cols = 2
                 btn_cols = st.columns(n_cols)
                 for i, nome in enumerate(nomes_pizza):
-                    cor_btn = cores_pizza[i]
                     with btn_cols[i % n_cols]:
                         is_active = st.session_state.filtro_cat_pizza == nome
                         btn_label = f"{'✅ ' if is_active else ''}{nome}"
@@ -987,61 +998,61 @@ elif pagina == "mes":
                         st.session_state.filtro_cat_col = []
                         st.session_state.filtro_tipo_mes = "Todos"
                         st.rerun()
-            else:
-                st.caption("Sem despesas neste mês")
+        else:
+            st.caption("Sem despesas neste mês")
 
-    with col_rec:
-        with st.container(border=True):
-            st.subheader(":material/payments: De onde veio o dinheiro")
+    # ========== SECAO RECEITAS (full-width abaixo) ==========
+    with st.container(border=True):
+        st.subheader(":material/payments: De onde veio o dinheiro")
 
-            # Agrupar receitas pequenas em "Outros" + corrigir typo Váriável -> Variável
-            receitas_norm = receitas_mes.copy()
-            receitas_norm['Categoria'] = receitas_norm['Categoria'].str.replace('Váriável', 'Variável', regex=False)
-            rec_cat_all = receitas_norm.groupby('Categoria')['Valor_num'].sum().sort_values(ascending=False)
-            total_rec_tmp = rec_cat_all.sum()
-            if total_rec_tmp > 0:
-                rec_pct = rec_cat_all / total_rec_tmp * 100
-                rec_principais = rec_cat_all[rec_pct >= 5]
-                rec_outros = rec_cat_all[rec_pct < 5]
-                if len(rec_outros) > 0:
-                    rec_principais['Outros'] = rec_outros.sum()
-                rec_cat = rec_principais.sort_values(ascending=True)
-            else:
-                rec_cat = rec_cat_all
+        # Agrupar receitas pequenas em "Outros" + corrigir typo Váriável -> Variável
+        receitas_norm = receitas_mes.copy()
+        receitas_norm['Categoria'] = receitas_norm['Categoria'].str.replace('Váriável', 'Variável', regex=False)
+        rec_cat_all = receitas_norm.groupby('Categoria')['Valor_num'].sum().sort_values(ascending=False)
+        total_rec_tmp = rec_cat_all.sum()
+        if total_rec_tmp > 0:
+            rec_pct = rec_cat_all / total_rec_tmp * 100
+            rec_principais = rec_cat_all[rec_pct >= 5]
+            rec_outros = rec_cat_all[rec_pct < 5]
+            if len(rec_outros) > 0:
+                rec_principais['Outros'] = rec_outros.sum()
+            rec_cat = rec_principais.sort_values(ascending=True)
+        else:
+            rec_cat = rec_cat_all
 
-            if len(rec_cat) > 0:
-                cores_rec = ['#00b894', '#55efc4', '#81ecec', '#74b9ff',
-                             '#a29bfe', '#6c5ce7', '#dfe6e9', '#b2bec3',
-                             '#fdcb6e', '#fab1a0', '#e17055']
+        if len(rec_cat) > 0:
+            cores_rec = ['#00b894', '#55efc4', '#81ecec', '#74b9ff',
+                         '#a29bfe', '#6c5ce7', '#dfe6e9', '#b2bec3',
+                         '#fdcb6e', '#fab1a0', '#e17055']
 
-                total_rec = rec_cat.sum()
-                tick_labels = [f"<b>{cat}</b><br>{v/total_rec*100:.1f}%" for cat, v in zip(rec_cat.index, rec_cat.values)]
+            total_rec = rec_cat.sum()
+            tick_labels = [f"<b>{cat}</b><br>{v/total_rec*100:.1f}%" for cat, v in zip(rec_cat.index, rec_cat.values)]
 
-                fig_rec = go.Figure(data=[go.Bar(
-                    y=tick_labels,
-                    x=rec_cat.values,
-                    orientation='h',
-                    marker_color=cores_rec[:len(rec_cat)],
-                    text=[f"<b>{fmt_brl(v)}</b>" for v in rec_cat.values],
-                    textposition='outside',
-                    textfont=dict(size=18, color='#2d3436'),
-                    hovertemplate='<b>%{customdata[0]}</b><br>%{customdata[1]}<extra></extra>',
-                    customdata=[[cat, fmt_brl(v)] for cat, v in zip(rec_cat.index, rec_cat.values)],
-                )])
+            fig_rec = go.Figure(data=[go.Bar(
+                y=tick_labels,
+                x=rec_cat.values,
+                orientation='h',
+                marker_color=cores_rec[:len(rec_cat)],
+                text=[f"<b>{fmt_brl(v)}</b>" for v in rec_cat.values],
+                textposition='outside',
+                textfont=dict(size=18, color='#2d3436'),
+                hovertemplate='<b>%{customdata[0]}</b><br>%{customdata[1]}<extra></extra>',
+                customdata=[[cat, fmt_brl(v)] for cat, v in zip(rec_cat.index, rec_cat.values)],
+            )])
 
-                max_val = rec_cat.max()
-                fig_rec.update_layout(
-                    height=420,
-                    margin=dict(t=10, b=20, l=10, r=10),
-                    xaxis=dict(range=[0, max_val * 2.4], visible=False),
-                    yaxis=dict(tickfont=dict(size=16, color='#2d3436')),
-                    showlegend=False,
-                    paper_bgcolor='rgba(0,0,0,0)',
-                    plot_bgcolor='rgba(0,0,0,0)',
-                )
-                st.plotly_chart(fig_rec, use_container_width=True)
-            else:
-                st.caption("Sem receitas neste mês")
+            max_val = rec_cat.max()
+            fig_rec.update_layout(
+                height=320,
+                margin=dict(t=10, b=20, l=10, r=10),
+                xaxis=dict(range=[0, max_val * 1.5], visible=False),
+                yaxis=dict(tickfont=dict(size=14, color='#2d3436')),
+                showlegend=False,
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+            )
+            st.plotly_chart(fig_rec, use_container_width=True)
+        else:
+            st.caption("Sem receitas neste mês")
 
     # Tabela de lançamentos
     st.subheader(f":material/receipt_long: Lançamentos de {mes_label_pt(mes_selecionado)}")
