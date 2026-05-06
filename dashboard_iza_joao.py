@@ -559,7 +559,7 @@ def card_html(bg, shadow, icon, label, value, extra=""):
     return f"""
     <div style="background:{bg}; border-radius:20px; padding:22px 14px;
          box-shadow:0 10px 30px {shadow}; color:white; margin-bottom:8px;
-         min-height:200px; box-sizing:border-box;
+         min-height:280px; height:100%; box-sizing:border-box;
          display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
       <div style="background:rgba(255,255,255,0.25); border-radius:50%;
            width:42px; height:42px; display:flex; align-items:center;
@@ -896,7 +896,7 @@ elif pagina == "mes":
       <div style="flex:2 1 300px;">
         <div style="background:#e17055; border-radius:20px; padding:22px 18px;
              box-shadow:0 10px 30px rgba(225,112,85,0.35); color:white; margin-bottom:8px;
-             min-height:200px; box-sizing:border-box;
+             min-height:280px; height:100%; box-sizing:border-box;
              display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
           <div style="display:flex; align-items:center; gap:14px; justify-content:center;">
             <div style="background:rgba(255,255,255,0.25); border-radius:50%;
