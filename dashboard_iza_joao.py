@@ -833,22 +833,22 @@ elif pagina == "mes":
               <div style="font-size:1.85rem; font-weight:800; line-height:1.1; letter-spacing:-0.5px; white-space:nowrap;">{fmt_brl(saiu)}</div>
             </div>
           </div>
-          <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:16px; width:100%;">
-            <div style="flex:1 1 80px; background:rgba(255,255,255,0.22); border-radius:12px; padding:12px 6px; text-align:center; min-width:0;">
-              <div style="font-size:0.78rem; opacity:0.95; margin-bottom:6px; font-weight:600;">🔒 Essencial</div>
-              <div style="font-size:1.1rem; font-weight:800; line-height:1.1;">{fmt_brl(desp_fixas_mes)}</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:16px; width:100%;">
+            <div style="background:rgba(255,255,255,0.22); border-radius:12px; padding:10px 8px; text-align:center;">
+              <div style="font-size:0.78rem; opacity:0.95; margin-bottom:4px; font-weight:600;">🔒 Essencial</div>
+              <div style="font-size:1.05rem; font-weight:800; line-height:1.1; white-space:nowrap;">{fmt_brl(desp_fixas_mes)}</div>
             </div>
-            <div style="flex:1 1 80px; background:rgba(255,255,255,0.22); border-radius:12px; padding:12px 6px; text-align:center; min-width:0;">
-              <div style="font-size:0.78rem; opacity:0.95; margin-bottom:6px; font-weight:600;">🔄 Não-Essen.</div>
-              <div style="font-size:1.1rem; font-weight:800; line-height:1.1;">{fmt_brl(desp_var_mes)}</div>
+            <div style="background:rgba(255,255,255,0.22); border-radius:12px; padding:10px 8px; text-align:center;">
+              <div style="font-size:0.78rem; opacity:0.95; margin-bottom:4px; font-weight:600;">🔄 Não-Essen.</div>
+              <div style="font-size:1.05rem; font-weight:800; line-height:1.1; white-space:nowrap;">{fmt_brl(desp_var_mes)}</div>
             </div>
-            <div style="flex:1 1 80px; background:rgba(255,255,255,0.22); border-radius:12px; padding:12px 6px; text-align:center; min-width:0;">
-              <div style="font-size:0.78rem; opacity:0.95; margin-bottom:6px; font-weight:600;">📦 Eventual</div>
-              <div style="font-size:1.1rem; font-weight:800; line-height:1.1;">{fmt_brl(desp_event_mes)}</div>
+            <div style="background:rgba(255,255,255,0.22); border-radius:12px; padding:10px 8px; text-align:center;">
+              <div style="font-size:0.78rem; opacity:0.95; margin-bottom:4px; font-weight:600;">📦 Eventual</div>
+              <div style="font-size:1.05rem; font-weight:800; line-height:1.1; white-space:nowrap;">{fmt_brl(desp_event_mes)}</div>
             </div>
-            <div style="flex:1 1 80px; background:rgba(255,255,255,0.22); border-radius:12px; padding:12px 6px; text-align:center; min-width:0;">
-              <div style="font-size:0.78rem; opacity:0.95; margin-bottom:6px; font-weight:600;">❓ Outros</div>
-              <div style="font-size:1.1rem; font-weight:800; line-height:1.1;">{fmt_brl(desp_outros_mes)}</div>
+            <div style="background:rgba(255,255,255,0.22); border-radius:12px; padding:10px 8px; text-align:center;">
+              <div style="font-size:0.78rem; opacity:0.95; margin-bottom:4px; font-weight:600;">❓ Outros</div>
+              <div style="font-size:1.05rem; font-weight:800; line-height:1.1; white-space:nowrap;">{fmt_brl(desp_outros_mes)}</div>
             </div>
           </div>
         </div>
