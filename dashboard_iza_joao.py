@@ -122,6 +122,15 @@ st.markdown("""
     /* Container com border (st.container border=True) */
     [data-testid="stVerticalBlockBorderWrapper"] { border-radius: 16px !important; }
 
+    /* Botoes de filtro categoria - compactos */
+    .stButton button[kind="secondary"] {
+        font-size: 12px !important;
+        padding: 4px 8px !important;
+        min-height: 32px !important;
+        line-height: 1.2 !important;
+        border-radius: 8px !important;
+    }
+
     section[data-testid="stSidebar"] { background-color: #1a1a2e !important; }
     section[data-testid="stSidebar"] p,
     section[data-testid="stSidebar"] span,
@@ -1031,35 +1040,35 @@ elif pagina == "mes":
                 legenda_html = '<div style="padding:6px 0;">' + ''.join(linhas) + '</div>'
                 st.markdown(legenda_html, unsafe_allow_html=True)
 
-                # Filtros logo abaixo da legenda
-                st.markdown('<div style="margin-top:14px; font-size:0.85rem; color:#636e72; font-weight:600;">Clique para filtrar os lançamentos:</div>', unsafe_allow_html=True)
-                n_cols = 2
-                btn_cols = st.columns(n_cols)
-                for i, nome in enumerate(nomes_pizza):
-                    with btn_cols[i % n_cols]:
-                        is_active = st.session_state.filtro_cat_pizza == nome
-                        btn_label = f"{'✅ ' if is_active else ''}{nome}"
-                        if st.button(btn_label, key=f"btn_cat_{i}", use_container_width=True):
-                            if is_active:
-                                st.session_state.filtro_cat_pizza = None
-                                st.session_state.filtro_cat_col = []
-                                st.session_state.filtro_tipo_mes = "Todos"
+            # Filtros full-width abaixo da donut+legenda (botoes pequenos, varias colunas)
+            st.markdown('<div style="margin-top:18px; font-size:0.8rem; color:#636e72; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Filtrar lançamentos por categoria</div>', unsafe_allow_html=True)
+            n_cols = min(6, len(nomes_pizza))
+            btn_cols = st.columns(n_cols)
+            for i, nome in enumerate(nomes_pizza):
+                with btn_cols[i % n_cols]:
+                    is_active = st.session_state.filtro_cat_pizza == nome
+                    btn_label = f"{'✅ ' if is_active else ''}{nome}"
+                    if st.button(btn_label, key=f"btn_cat_{i}", use_container_width=True):
+                        if is_active:
+                            st.session_state.filtro_cat_pizza = None
+                            st.session_state.filtro_cat_col = []
+                            st.session_state.filtro_tipo_mes = "Todos"
+                        else:
+                            st.session_state.filtro_cat_pizza = nome
+                            st.session_state.filtro_fixvar_mes = "Todos"
+                            if 'Outros' not in nome:
+                                st.session_state.filtro_cat_col = [nome]
                             else:
-                                st.session_state.filtro_cat_pizza = nome
-                                st.session_state.filtro_fixvar_mes = "Todos"
-                                if 'Outros' not in nome:
-                                    st.session_state.filtro_cat_col = [nome]
-                                else:
-                                    st.session_state.filtro_cat_col = []
-                                st.session_state.filtro_tipo_mes = "Saída"
-                            st.rerun()
-
-                if st.session_state.filtro_cat_pizza:
-                    if st.button("❌ Limpar filtro", key="limpar_pizza", use_container_width=True):
-                        st.session_state.filtro_cat_pizza = None
-                        st.session_state.filtro_cat_col = []
-                        st.session_state.filtro_tipo_mes = "Todos"
+                                st.session_state.filtro_cat_col = []
+                            st.session_state.filtro_tipo_mes = "Saída"
                         st.rerun()
+
+            if st.session_state.filtro_cat_pizza:
+                if st.button("❌ Limpar filtro", key="limpar_pizza"):
+                    st.session_state.filtro_cat_pizza = None
+                    st.session_state.filtro_cat_col = []
+                    st.session_state.filtro_tipo_mes = "Todos"
+                    st.rerun()
         else:
             st.caption("Sem despesas neste mês")
 
