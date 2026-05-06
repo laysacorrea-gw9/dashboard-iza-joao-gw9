@@ -868,11 +868,7 @@ elif pagina == "mes":
 
                 if len(outros) > 0:
                     valores_pizza.append(desp_cat[outros.index].sum())
-                    # Listar quais categorias estao dentro de "Outros" no proprio label
-                    nomes_outros = ", ".join(outros.index[:4])  # primeiras 4
-                    if len(outros) > 4:
-                        nomes_outros += f" +{len(outros)-4}"
-                    nomes_pizza.append(f'Outros ({nomes_outros})')
+                    nomes_pizza.append(f'Outros ({len(outros)} cat.)')
 
                 cores = ['#6c5ce7', '#00b894', '#fd79a8', '#fdcb6e', '#e17055',
                          '#74b9ff', '#a29bfe', '#55efc4', '#fab1a0', '#00cec9',
@@ -893,9 +889,9 @@ elif pagina == "mes":
                     labels=nomes_pizza,
                     values=valores_pizza,
                     hole=0.42,
-                    texttemplate='<b>%{label}</b><br><b>%{customdata}</b>',
+                    texttemplate='<b>%{label}</b><br>%{customdata}',
                     textposition='outside',
-                    textfont=dict(size=17, color='#2d3436'),
+                    textfont=dict(size=13, color='#2d3436'),
                     marker=dict(colors=cores_pizza, line=dict(width=2, color='white')),
                     pull=pull_pizza,
                     customdata=[fmt_brl(v) for v in valores_pizza],
@@ -917,10 +913,11 @@ elif pagina == "mes":
                 ))
 
                 fig_pizza.update_layout(
-                    height=580,
-                    margin=dict(t=90, b=90, l=120, r=120),
+                    height=560,
+                    margin=dict(t=70, b=70, l=80, r=80),
                     showlegend=False,
-                    annotations=[dict(text=f'<b>{fmt_brl(saiu)}</b>', x=0.5, y=0.5, font_size=20, showarrow=False)],
+                    uniformtext=dict(minsize=11, mode='hide'),
+                    annotations=[dict(text=f'<b>{fmt_brl(saiu)}</b>', x=0.5, y=0.5, font_size=18, showarrow=False)],
                     paper_bgcolor='rgba(0,0,0,0)',
                     plot_bgcolor='rgba(0,0,0,0)',
                 )
@@ -964,15 +961,17 @@ elif pagina == "mes":
         with st.container(border=True):
             st.subheader(":material/payments: De onde veio o dinheiro")
 
-            # Agrupar receitas pequenas em "Outros"
-            rec_cat_all = receitas_mes.groupby('Categoria')['Valor_num'].sum().sort_values(ascending=False)
+            # Agrupar receitas pequenas em "Outros" + corrigir typo Váriável -> Variável
+            receitas_norm = receitas_mes.copy()
+            receitas_norm['Categoria'] = receitas_norm['Categoria'].str.replace('Váriável', 'Variável', regex=False)
+            rec_cat_all = receitas_norm.groupby('Categoria')['Valor_num'].sum().sort_values(ascending=False)
             total_rec_tmp = rec_cat_all.sum()
             if total_rec_tmp > 0:
                 rec_pct = rec_cat_all / total_rec_tmp * 100
                 rec_principais = rec_cat_all[rec_pct >= 5]
                 rec_outros = rec_cat_all[rec_pct < 5]
                 if len(rec_outros) > 0:
-                    rec_principais[f'Outros ({len(rec_outros)})'] = rec_outros.sum()
+                    rec_principais['Outros'] = rec_outros.sum()
                 rec_cat = rec_principais.sort_values(ascending=True)
             else:
                 rec_cat = rec_cat_all
