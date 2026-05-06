@@ -78,32 +78,44 @@ st.markdown("""
     section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] { background-color: transparent !important; }
     .stSelectbox > label, .stMultiSelect > label { font-size: 14px; font-weight: 600; }
 
-    /* Substituir texto cru do botao de collapse da sidebar (quando Material Symbols nao carrega)
-       O Streamlit renderiza "keyboard_double_arrow_left" como texto se a fonte falha. */
-    [data-testid="stSidebarCollapseButton"] span.material-symbols-rounded,
-    [data-testid="stSidebarCollapsedControl"] span.material-symbols-rounded {
+    /* Botao de collapse da sidebar - zerar texto cru e injetar seta unicode */
+    [data-testid="stSidebarCollapseButton"] *,
+    [data-testid="stSidebarCollapsedControl"] *,
+    button[aria-label*="sidebar" i] * {
+        font-size: 0 !important;
+        line-height: 0 !important;
+        color: transparent !important;
+    }
+    [data-testid="stSidebarCollapseButton"]::after {
+        content: "‹‹" !important;
+        font-size: 20px !important;
+        font-family: Inter, sans-serif !important;
+        font-weight: 800 !important;
+        color: #a0b4f0 !important;
+        line-height: 1 !important;
+        display: inline-block !important;
+    }
+    [data-testid="stSidebarCollapsedControl"]::after {
+        content: "››" !important;
+        font-size: 22px !important;
+        font-family: Inter, sans-serif !important;
+        font-weight: 800 !important;
+        color: #2d2d3a !important;
+        line-height: 1 !important;
+        display: inline-block !important;
+        padding: 6px 10px !important;
+    }
+
+    /* Fix do "uploadUpload" duplicado no mobile - hide tudo menos o texto e re-add */
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] button {
         font-size: 0 !important;
     }
-    [data-testid="stSidebarCollapseButton"] span.material-symbols-rounded::before {
-        content: "\\00ab" !important; /* « */
-        font-size: 22px !important;
-        font-family: Inter, sans-serif !important;
-        font-weight: 700 !important;
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] button::after {
+        content: "Upload" !important;
+        font-size: 13px !important;
         color: #a0b4f0 !important;
-    }
-    [data-testid="stSidebarCollapsedControl"] span.material-symbols-rounded::before {
-        content: "\\00bb" !important; /* » */
-        font-size: 22px !important;
         font-family: Inter, sans-serif !important;
-        font-weight: 700 !important;
-        color: #2d2d3a !important;
     }
-
-    /* Fallback geral pra qualquer texto de Material Symbol que vaze como string */
-    span.material-symbols-rounded { font-family: 'Material Symbols Rounded', 'Material Icons', sans-serif !important; }
-
-    /* Esconder o "uploadUpload" duplicado do FileUploader em mobile */
-    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] button[kind="secondary"] span:nth-of-type(2) { display: none !important; }
 </style>
 """, unsafe_allow_html=True)
 
