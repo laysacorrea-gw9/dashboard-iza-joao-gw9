@@ -446,17 +446,17 @@ st.title(":material/account_balance_wallet: Finanças de vocês, Iza & João")
 
 def card_html(bg, shadow, icon, label, value, extra=""):
     return f"""
-    <div style="background:{bg}; border-radius:18px; padding:20px 16px;
+    <div style="background:{bg}; border-radius:18px; padding:18px 14px;
          box-shadow:0 8px 24px {shadow}; color:white; margin-bottom:6px;
-         min-height:180px; box-sizing:border-box;
+         min-height:170px; box-sizing:border-box;
          display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
-      <div style="display:flex; align-items:center; gap:12px; justify-content:center; min-width:0;">
+      <div style="display:flex; align-items:center; gap:10px; justify-content:center; min-width:0; flex-wrap:wrap;">
         <div style="background:rgba(255,255,255,0.25); border-radius:50%;
-             width:48px; height:48px; display:flex; align-items:center;
-             justify-content:center; font-size:1.4rem; flex-shrink:0;">{icon}</div>
+             width:40px; height:40px; display:flex; align-items:center;
+             justify-content:center; font-size:1.2rem; flex-shrink:0;">{icon}</div>
         <div style="min-width:0;">
-          <div style="font-size:1rem; opacity:0.88; font-weight:600; white-space:nowrap;">{label}</div>
-          <div style="font-size:2rem; font-weight:800; line-height:1.1; white-space:nowrap;">{value}</div>
+          <div style="font-size:0.9rem; opacity:0.88; font-weight:600;">{label}</div>
+          <div style="font-size:1.4rem; font-weight:800; line-height:1.15;">{value}</div>
         </div>
       </div>
       {extra}
@@ -776,61 +776,55 @@ elif pagina == "mes":
     bal_label = "Sobrou" if saldo_mes >= 0 else "Faltou"
     bal_icon = "↑" if saldo_mes >= 0 else "↓"
 
-    # Saidas tem 4 sub-cards entao precisa ser bem mais largo
-    col_e, col_s, col_op, col_i, col_b = st.columns([1, 2.2, 1, 0.9, 1])
+    # Layout responsivo: cards em flex-wrap. Saidas ocupa 2x no desktop, full no mobile.
+    inv_card = card_html("#6c5ce7", "rgba(108,92,231,0.35)", "📊", "Investido", fmt_brl(investido)) if investido > 0 \
+               else card_html("#b2bec3", "rgba(178,190,195,0.2)", "📊", "Investido", "R$ 0")
 
-    with col_e:
-        st.markdown(card_html("#00b894", "rgba(0,184,148,0.35)", "↑", "Entradas", fmt_brl(entrou)), unsafe_allow_html=True)
+    op_extra = '<div style="margin-top:10px; font-size:0.8rem; opacity:0.85;">Entrada − Saída<br><i>(antes de investir)</i></div>'
+    bal_extra = '<div style="margin-top:10px; font-size:0.8rem; opacity:0.85;"><i>(depois de investir)</i></div>'
 
-    with col_s:
-        st.markdown(f"""
-        <div style="background:#e17055; border-radius:18px; padding:22px 24px;
+    st.markdown(f"""
+    <div style="display:flex; flex-wrap:wrap; gap:12px; margin-bottom:8px;">
+      <div style="flex:1 1 160px;">{card_html("#00b894", "rgba(0,184,148,0.35)", "↑", "Entradas", fmt_brl(entrou))}</div>
+      <div style="flex:2.2 1 320px;">
+        <div style="background:#e17055; border-radius:18px; padding:18px 18px;
              box-shadow:0 8px 24px rgba(225,112,85,0.35); color:white; margin-bottom:6px;
-             min-height:180px; box-sizing:border-box;
+             min-height:170px; box-sizing:border-box;
              display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
-          <div style="display:flex; align-items:center; gap:14px; justify-content:center;">
+          <div style="display:flex; align-items:center; gap:12px; justify-content:center; flex-wrap:wrap;">
             <div style="background:rgba(255,255,255,0.25); border-radius:50%;
-                 width:56px; height:56px; display:flex; align-items:center;
-                 justify-content:center; font-size:1.6rem; flex-shrink:0;">↓</div>
+                 width:44px; height:44px; display:flex; align-items:center;
+                 justify-content:center; font-size:1.3rem; flex-shrink:0;">↓</div>
             <div>
-              <div style="font-size:1.15rem; opacity:0.88; font-weight:600;">Saídas</div>
-              <div style="font-size:2.4rem; font-weight:800; line-height:1.1;">{fmt_brl(saiu)}</div>
+              <div style="font-size:1rem; opacity:0.88; font-weight:600;">Saídas</div>
+              <div style="font-size:1.7rem; font-weight:800; line-height:1.1;">{fmt_brl(saiu)}</div>
             </div>
           </div>
-          <div style="display:flex; gap:8px; margin-top:16px; width:100%;">
-            <div style="flex:1; background:rgba(255,255,255,0.2); border-radius:12px; padding:14px 8px; text-align:center; min-width:0;">
-              <div style="font-size:0.85rem; opacity:0.9; margin-bottom:8px; font-weight:600; white-space:nowrap;">🔒 Essencial</div>
-              <div style="font-size:1.15rem; font-weight:800; line-height:1.1; white-space:nowrap;">{fmt_brl(desp_fixas_mes)}</div>
+          <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:14px; width:100%;">
+            <div style="flex:1 1 70px; background:rgba(255,255,255,0.2); border-radius:10px; padding:8px 4px; text-align:center; min-width:0;">
+              <div style="font-size:0.72rem; opacity:0.9; margin-bottom:4px; font-weight:600;">🔒 Essencial</div>
+              <div style="font-size:0.95rem; font-weight:800; line-height:1.1;">{fmt_brl(desp_fixas_mes)}</div>
             </div>
-            <div style="flex:1; background:rgba(255,255,255,0.2); border-radius:12px; padding:14px 8px; text-align:center; min-width:0;">
-              <div style="font-size:0.85rem; opacity:0.9; margin-bottom:8px; font-weight:600; white-space:nowrap;">🔄 Não-Essen.</div>
-              <div style="font-size:1.15rem; font-weight:800; line-height:1.1; white-space:nowrap;">{fmt_brl(desp_var_mes)}</div>
+            <div style="flex:1 1 70px; background:rgba(255,255,255,0.2); border-radius:10px; padding:8px 4px; text-align:center; min-width:0;">
+              <div style="font-size:0.72rem; opacity:0.9; margin-bottom:4px; font-weight:600;">🔄 Não-Essen.</div>
+              <div style="font-size:0.95rem; font-weight:800; line-height:1.1;">{fmt_brl(desp_var_mes)}</div>
             </div>
-            <div style="flex:1; background:rgba(255,255,255,0.2); border-radius:12px; padding:14px 8px; text-align:center; min-width:0;">
-              <div style="font-size:0.85rem; opacity:0.9; margin-bottom:8px; font-weight:600; white-space:nowrap;">📦 Eventual</div>
-              <div style="font-size:1.15rem; font-weight:800; line-height:1.1; white-space:nowrap;">{fmt_brl(desp_event_mes)}</div>
+            <div style="flex:1 1 70px; background:rgba(255,255,255,0.2); border-radius:10px; padding:8px 4px; text-align:center; min-width:0;">
+              <div style="font-size:0.72rem; opacity:0.9; margin-bottom:4px; font-weight:600;">📦 Eventual</div>
+              <div style="font-size:0.95rem; font-weight:800; line-height:1.1;">{fmt_brl(desp_event_mes)}</div>
             </div>
-            <div style="flex:1; background:rgba(255,255,255,0.2); border-radius:12px; padding:14px 8px; text-align:center; min-width:0;">
-              <div style="font-size:0.85rem; opacity:0.9; margin-bottom:8px; font-weight:600; white-space:nowrap;">❓ Outros</div>
-              <div style="font-size:1.15rem; font-weight:800; line-height:1.1; white-space:nowrap;">{fmt_brl(desp_outros_mes)}</div>
+            <div style="flex:1 1 70px; background:rgba(255,255,255,0.2); border-radius:10px; padding:8px 4px; text-align:center; min-width:0;">
+              <div style="font-size:0.72rem; opacity:0.9; margin-bottom:4px; font-weight:600;">❓ Outros</div>
+              <div style="font-size:0.95rem; font-weight:800; line-height:1.1;">{fmt_brl(desp_outros_mes)}</div>
             </div>
           </div>
-        </div>""", unsafe_allow_html=True)
-
-    with col_op:
-        # Mostra "Receita - Despesa" antes de investir
-        sub_extra = '<div style="margin-top:14px; font-size:0.85rem; opacity:0.85;">Entrada − Saída<br><i>(antes de investir)</i></div>'
-        st.markdown(card_html(op_bg, op_shadow, op_icon, op_label, fmt_brl(abs(sobra_operacional)), sub_extra), unsafe_allow_html=True)
-
-    with col_i:
-        if investido > 0:
-            st.markdown(card_html("#6c5ce7", "rgba(108,92,231,0.35)", "📊", "Investido", fmt_brl(investido)), unsafe_allow_html=True)
-        else:
-            st.markdown(card_html("#b2bec3", "rgba(178,190,195,0.2)", "📊", "Investido", "R$ 0"), unsafe_allow_html=True)
-
-    with col_b:
-        sub_final = '<div style="margin-top:14px; font-size:0.85rem; opacity:0.85;"><i>(depois de investir)</i></div>'
-        st.markdown(card_html(bal_bg, bal_shadow, bal_icon, bal_label, fmt_brl(abs(saldo_mes)), sub_final), unsafe_allow_html=True)
+        </div>
+      </div>
+      <div style="flex:1 1 160px;">{card_html(op_bg, op_shadow, op_icon, op_label, fmt_brl(abs(sobra_operacional)), op_extra)}</div>
+      <div style="flex:1 1 140px;">{inv_card}</div>
+      <div style="flex:1 1 160px;">{card_html(bal_bg, bal_shadow, bal_icon, bal_label, fmt_brl(abs(saldo_mes)), bal_extra)}</div>
+    </div>
+    """, unsafe_allow_html=True)
 
     # Alerta sem categoria / A Categorizar
     a_cat = df_mes[df_mes['Categoria'].isin(['A Categorizar', 'Sem Categoria'])]
