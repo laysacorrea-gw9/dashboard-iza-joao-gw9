@@ -28,9 +28,7 @@ MESES_PT_CURTO = {
 
 
 def fmt_brl(valor):
-    if abs(valor) >= 1000:
-        return f"R$ {valor:,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
-    return f"R$ {valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    return f"R$ {valor:,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 
 def mes_label_pt(ano_mes_str):
@@ -79,6 +77,16 @@ st.markdown("""
     section[data-testid="stSidebar"] [data-testid="stFileUploader"] * { color: #a0b4f0 !important; }
     section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] { background-color: transparent !important; }
     .stSelectbox > label, .stMultiSelect > label { font-size: 14px; font-weight: 600; }
+
+    /* Esconder o botao de collapse da sidebar do Streamlit que renderiza "keyboard_double_arrow_left" como texto */
+    [data-testid="stSidebarCollapseButton"],
+    [data-testid="stSidebarCollapsedControl"],
+    button[kind="headerNoPadding"][aria-label*="sidebar" i],
+    button[data-testid="baseButton-headerNoPadding"] { display: none !important; }
+
+    /* Garantir que material symbols carregam */
+    @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+    @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap');
 </style>
 """, unsafe_allow_html=True)
 
