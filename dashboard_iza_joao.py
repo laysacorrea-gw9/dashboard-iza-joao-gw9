@@ -44,9 +44,83 @@ def mes_label_curto(ano_mes_str):
 # CSS global
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-    html, body, [class*="st-"] { font-family: 'Inter', sans-serif; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+    /* ===========================================================
+       SISTEMA DE TIPOGRAFIA — escala unica e consistente
+       --h1: titulos de pagina (26px)
+       --h2: subheaders de secao (20px)
+       --h3: titulos menores (16px)
+       --body: texto normal (14px)
+       --caption: legendas/help (12px)
+       =========================================================== */
+    :root {
+        --font-h1: 26px;
+        --font-h2: 20px;
+        --font-h3: 16px;
+        --font-body: 14px;
+        --font-caption: 12px;
+        --color-text: #2d3436;
+        --color-muted: #636e72;
+        --color-light: #95a5a6;
+    }
+
+    html, body, [class*="st-"], [class*="stApp"] {
+        font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+        color: var(--color-text);
+        -webkit-font-smoothing: antialiased;
+    }
+
     .main .block-container { padding-top: 1.5rem; max-width: 1400px; }
+
+    /* Titulos */
+    .main h1 { font-size: var(--font-h1) !important; font-weight: 800 !important; letter-spacing: -0.5px !important; line-height: 1.2 !important; color: var(--color-text) !important; }
+    .main h2 { font-size: var(--font-h2) !important; font-weight: 700 !important; letter-spacing: -0.3px !important; line-height: 1.3 !important; color: var(--color-text) !important; margin-top: 0 !important; }
+    .main h3 { font-size: var(--font-h3) !important; font-weight: 700 !important; letter-spacing: -0.2px !important; line-height: 1.3 !important; color: var(--color-text) !important; }
+
+    /* Subheaders Streamlit */
+    [data-testid="stHeading"] h3 { font-size: var(--font-h2) !important; font-weight: 700 !important; }
+
+    /* Texto/markdown */
+    .main p, .main li, .main label, .main [data-testid="stMarkdownContainer"] p {
+        font-size: var(--font-body) !important;
+        line-height: 1.5 !important;
+        color: var(--color-text) !important;
+    }
+
+    /* Captions */
+    [data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] p {
+        font-size: var(--font-caption) !important;
+        color: var(--color-muted) !important;
+        line-height: 1.4 !important;
+    }
+
+    /* Inputs e labels */
+    .stSelectbox label, .stMultiSelect label, .stTextInput label, .stDateInput label, .stRadio label, .stCheckbox label {
+        font-size: var(--font-body) !important;
+        font-weight: 600 !important;
+        color: var(--color-text) !important;
+    }
+
+    /* Botoes */
+    .stButton button {
+        font-size: var(--font-body) !important;
+        font-weight: 600 !important;
+        font-family: 'Inter', sans-serif !important;
+    }
+
+    /* Tabelas/Dataframes */
+    [data-testid="stDataFrame"] *, .stDataFrame * {
+        font-family: 'Inter', sans-serif !important;
+    }
+    [data-testid="stDataFrame"] th { font-size: var(--font-caption) !important; font-weight: 700 !important; text-transform: uppercase; letter-spacing: 0.5px !important; color: var(--color-muted) !important; }
+    [data-testid="stDataFrame"] td { font-size: var(--font-body) !important; color: var(--color-text) !important; }
+
+    /* Alertas */
+    [data-testid="stAlert"] { font-size: var(--font-body) !important; }
+
+    /* Container com border (st.container border=True) */
+    [data-testid="stVerticalBlockBorderWrapper"] { border-radius: 16px !important; }
 
     section[data-testid="stSidebar"] { background-color: #1a1a2e !important; }
     section[data-testid="stSidebar"] p,
