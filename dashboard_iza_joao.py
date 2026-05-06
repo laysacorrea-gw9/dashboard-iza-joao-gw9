@@ -78,43 +78,43 @@ st.markdown("""
     section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] { background-color: transparent !important; }
     .stSelectbox > label, .stMultiSelect > label { font-size: 14px; font-weight: 600; }
 
-    /* Botao de collapse da sidebar - zerar texto cru e injetar seta unicode */
-    [data-testid="stSidebarCollapseButton"] *,
-    [data-testid="stSidebarCollapsedControl"] *,
-    button[aria-label*="sidebar" i] * {
+    /* Botao de collapse/expand da sidebar - Material Symbols nao carrega esses 2 icones,
+       ent~ao escondemos o texto cru "keyboard_double_arrow_*" e injetamos seta unicode */
+    [data-testid="stSidebarCollapseButton"] [data-testid="stIconMaterial"],
+    [data-testid="stExpandSidebarButton"] [data-testid="stIconMaterial"] {
         font-size: 0 !important;
-        line-height: 0 !important;
         color: transparent !important;
-    }
-    [data-testid="stSidebarCollapseButton"]::after {
-        content: "‹‹" !important;
-        font-size: 20px !important;
-        font-family: Inter, sans-serif !important;
-        font-weight: 800 !important;
-        color: #a0b4f0 !important;
-        line-height: 1 !important;
+        position: relative !important;
+        width: 24px !important;
+        height: 24px !important;
         display: inline-block !important;
     }
-    [data-testid="stSidebarCollapsedControl"]::after {
+    [data-testid="stSidebarCollapseButton"] [data-testid="stIconMaterial"]::before {
+        content: "‹‹" !important;
+        font-size: 18px !important;
+        font-family: Inter, system-ui, sans-serif !important;
+        font-weight: 800 !important;
+        color: #a0b4f0 !important;
+        position: absolute !important;
+        left: 50% !important;
+        top: 50% !important;
+        transform: translate(-50%, -50%) !important;
+    }
+    [data-testid="stExpandSidebarButton"] [data-testid="stIconMaterial"]::before {
         content: "››" !important;
-        font-size: 22px !important;
-        font-family: Inter, sans-serif !important;
+        font-size: 18px !important;
+        font-family: Inter, system-ui, sans-serif !important;
         font-weight: 800 !important;
         color: #2d2d3a !important;
-        line-height: 1 !important;
-        display: inline-block !important;
-        padding: 6px 10px !important;
+        position: absolute !important;
+        left: 50% !important;
+        top: 50% !important;
+        transform: translate(-50%, -50%) !important;
     }
 
-    /* Fix do "uploadUpload" duplicado no mobile - hide tudo menos o texto e re-add */
-    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] button {
-        font-size: 0 !important;
-    }
-    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] button::after {
-        content: "Upload" !important;
-        font-size: 13px !important;
-        color: #a0b4f0 !important;
-        font-family: Inter, sans-serif !important;
+    /* Fix do "uploadUpload" duplicado - escondemos o icon e mantemos o texto */
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] button [data-testid="stIconMaterial"] {
+        display: none !important;
     }
 </style>
 """, unsafe_allow_html=True)
