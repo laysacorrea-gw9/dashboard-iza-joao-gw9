@@ -821,9 +821,9 @@ elif pagina == "mes":
     bal_extra = '<div style="margin-top:14px; font-size:0.85rem; opacity:0.9;"><i>(depois de investir)</i></div>'
 
     st.markdown(f"""
-    <div style="display:flex; flex-wrap:wrap; gap:14px; margin-bottom:24px;">
-      <div style="flex:1 1 180px;">{card_html("#00b894", "rgba(0,184,148,0.35)", "↑", "Entradas", fmt_brl(entrou))}</div>
-      <div style="flex:2.2 1 360px;">
+    <div style="display:flex; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
+      <div style="flex:1 1 140px;">{card_html("#00b894", "rgba(0,184,148,0.35)", "↑", "Entradas", fmt_brl(entrou))}</div>
+      <div style="flex:2 1 300px;">
         <div style="background:#e17055; border-radius:20px; padding:22px 22px;
              box-shadow:0 10px 30px rgba(225,112,85,0.35); color:white; margin-bottom:8px;
              min-height:200px; box-sizing:border-box;
@@ -857,9 +857,9 @@ elif pagina == "mes":
           </div>
         </div>
       </div>
-      <div style="flex:1 1 180px;">{card_html(op_bg, op_shadow, op_icon, op_label, fmt_brl(abs(sobra_operacional)), op_extra)}</div>
-      <div style="flex:1 1 160px;">{inv_card}</div>
-      <div style="flex:1 1 180px;">{card_html(bal_bg, bal_shadow, bal_icon, bal_label, fmt_brl(abs(saldo_mes)), bal_extra)}</div>
+      <div style="flex:1 1 140px;">{card_html(op_bg, op_shadow, op_icon, op_label, fmt_brl(abs(sobra_operacional)), op_extra)}</div>
+      <div style="flex:1 1 130px;">{inv_card}</div>
+      <div style="flex:1 1 140px;">{card_html(bal_bg, bal_shadow, bal_icon, bal_label, fmt_brl(abs(saldo_mes)), bal_extra)}</div>
     </div>
     """, unsafe_allow_html=True)
 
