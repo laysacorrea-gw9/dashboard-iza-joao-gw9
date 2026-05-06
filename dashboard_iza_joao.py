@@ -483,17 +483,17 @@ st.title(":material/account_balance_wallet: Finanças de vocês, Iza & João")
 
 def card_html(bg, shadow, icon, label, value, extra=""):
     return f"""
-    <div style="background:{bg}; border-radius:18px; padding:18px 14px;
-         box-shadow:0 8px 24px {shadow}; color:white; margin-bottom:6px;
-         min-height:170px; box-sizing:border-box;
+    <div style="background:{bg}; border-radius:20px; padding:24px 18px;
+         box-shadow:0 10px 30px {shadow}; color:white; margin-bottom:8px;
+         min-height:200px; box-sizing:border-box;
          display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
-      <div style="display:flex; align-items:center; gap:10px; justify-content:center; min-width:0; flex-wrap:wrap;">
+      <div style="display:flex; align-items:center; gap:12px; justify-content:center; min-width:0; flex-wrap:wrap;">
         <div style="background:rgba(255,255,255,0.25); border-radius:50%;
-             width:40px; height:40px; display:flex; align-items:center;
-             justify-content:center; font-size:1.2rem; flex-shrink:0;">{icon}</div>
+             width:46px; height:46px; display:flex; align-items:center;
+             justify-content:center; font-size:1.4rem; flex-shrink:0;">{icon}</div>
         <div style="min-width:0;">
-          <div style="font-size:0.9rem; opacity:0.88; font-weight:600;">{label}</div>
-          <div style="font-size:1.4rem; font-weight:800; line-height:1.15;">{value}</div>
+          <div style="font-size:0.95rem; opacity:0.9; font-weight:600; letter-spacing:0.3px;">{label}</div>
+          <div style="font-size:1.7rem; font-weight:800; line-height:1.15; letter-spacing:-0.5px;">{value}</div>
         </div>
       </div>
       {extra}
@@ -817,49 +817,49 @@ elif pagina == "mes":
     inv_card = card_html("#6c5ce7", "rgba(108,92,231,0.35)", "📊", "Investido", fmt_brl(investido)) if investido > 0 \
                else card_html("#b2bec3", "rgba(178,190,195,0.2)", "📊", "Investido", "R$ 0")
 
-    op_extra = '<div style="margin-top:10px; font-size:0.8rem; opacity:0.85;">Entrada − Saída<br><i>(antes de investir)</i></div>'
-    bal_extra = '<div style="margin-top:10px; font-size:0.8rem; opacity:0.85;"><i>(depois de investir)</i></div>'
+    op_extra = '<div style="margin-top:14px; font-size:0.85rem; opacity:0.9;">Entrada − Saída<br><i>(antes de investir)</i></div>'
+    bal_extra = '<div style="margin-top:14px; font-size:0.85rem; opacity:0.9;"><i>(depois de investir)</i></div>'
 
     st.markdown(f"""
-    <div style="display:flex; flex-wrap:wrap; gap:12px; margin-bottom:8px;">
-      <div style="flex:1 1 160px;">{card_html("#00b894", "rgba(0,184,148,0.35)", "↑", "Entradas", fmt_brl(entrou))}</div>
-      <div style="flex:2.2 1 320px;">
-        <div style="background:#e17055; border-radius:18px; padding:18px 18px;
-             box-shadow:0 8px 24px rgba(225,112,85,0.35); color:white; margin-bottom:6px;
-             min-height:170px; box-sizing:border-box;
+    <div style="display:flex; flex-wrap:wrap; gap:14px; margin-bottom:24px;">
+      <div style="flex:1 1 180px;">{card_html("#00b894", "rgba(0,184,148,0.35)", "↑", "Entradas", fmt_brl(entrou))}</div>
+      <div style="flex:2.2 1 360px;">
+        <div style="background:#e17055; border-radius:20px; padding:22px 22px;
+             box-shadow:0 10px 30px rgba(225,112,85,0.35); color:white; margin-bottom:8px;
+             min-height:200px; box-sizing:border-box;
              display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
-          <div style="display:flex; align-items:center; gap:12px; justify-content:center; flex-wrap:wrap;">
+          <div style="display:flex; align-items:center; gap:14px; justify-content:center; flex-wrap:wrap;">
             <div style="background:rgba(255,255,255,0.25); border-radius:50%;
-                 width:44px; height:44px; display:flex; align-items:center;
-                 justify-content:center; font-size:1.3rem; flex-shrink:0;">↓</div>
+                 width:50px; height:50px; display:flex; align-items:center;
+                 justify-content:center; font-size:1.5rem; flex-shrink:0;">↓</div>
             <div>
-              <div style="font-size:1rem; opacity:0.88; font-weight:600;">Saídas</div>
-              <div style="font-size:1.7rem; font-weight:800; line-height:1.1;">{fmt_brl(saiu)}</div>
+              <div style="font-size:1.05rem; opacity:0.9; font-weight:600; letter-spacing:0.3px;">Saídas</div>
+              <div style="font-size:2rem; font-weight:800; line-height:1.1; letter-spacing:-0.5px;">{fmt_brl(saiu)}</div>
             </div>
           </div>
-          <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:14px; width:100%;">
-            <div style="flex:1 1 70px; background:rgba(255,255,255,0.2); border-radius:10px; padding:8px 4px; text-align:center; min-width:0;">
-              <div style="font-size:0.72rem; opacity:0.9; margin-bottom:4px; font-weight:600;">🔒 Essencial</div>
-              <div style="font-size:0.95rem; font-weight:800; line-height:1.1;">{fmt_brl(desp_fixas_mes)}</div>
+          <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:18px; width:100%;">
+            <div style="flex:1 1 80px; background:rgba(255,255,255,0.22); border-radius:12px; padding:12px 6px; text-align:center; min-width:0;">
+              <div style="font-size:0.78rem; opacity:0.95; margin-bottom:6px; font-weight:600;">🔒 Essencial</div>
+              <div style="font-size:1.1rem; font-weight:800; line-height:1.1;">{fmt_brl(desp_fixas_mes)}</div>
             </div>
-            <div style="flex:1 1 70px; background:rgba(255,255,255,0.2); border-radius:10px; padding:8px 4px; text-align:center; min-width:0;">
-              <div style="font-size:0.72rem; opacity:0.9; margin-bottom:4px; font-weight:600;">🔄 Não-Essen.</div>
-              <div style="font-size:0.95rem; font-weight:800; line-height:1.1;">{fmt_brl(desp_var_mes)}</div>
+            <div style="flex:1 1 80px; background:rgba(255,255,255,0.22); border-radius:12px; padding:12px 6px; text-align:center; min-width:0;">
+              <div style="font-size:0.78rem; opacity:0.95; margin-bottom:6px; font-weight:600;">🔄 Não-Essen.</div>
+              <div style="font-size:1.1rem; font-weight:800; line-height:1.1;">{fmt_brl(desp_var_mes)}</div>
             </div>
-            <div style="flex:1 1 70px; background:rgba(255,255,255,0.2); border-radius:10px; padding:8px 4px; text-align:center; min-width:0;">
-              <div style="font-size:0.72rem; opacity:0.9; margin-bottom:4px; font-weight:600;">📦 Eventual</div>
-              <div style="font-size:0.95rem; font-weight:800; line-height:1.1;">{fmt_brl(desp_event_mes)}</div>
+            <div style="flex:1 1 80px; background:rgba(255,255,255,0.22); border-radius:12px; padding:12px 6px; text-align:center; min-width:0;">
+              <div style="font-size:0.78rem; opacity:0.95; margin-bottom:6px; font-weight:600;">📦 Eventual</div>
+              <div style="font-size:1.1rem; font-weight:800; line-height:1.1;">{fmt_brl(desp_event_mes)}</div>
             </div>
-            <div style="flex:1 1 70px; background:rgba(255,255,255,0.2); border-radius:10px; padding:8px 4px; text-align:center; min-width:0;">
-              <div style="font-size:0.72rem; opacity:0.9; margin-bottom:4px; font-weight:600;">❓ Outros</div>
-              <div style="font-size:0.95rem; font-weight:800; line-height:1.1;">{fmt_brl(desp_outros_mes)}</div>
+            <div style="flex:1 1 80px; background:rgba(255,255,255,0.22); border-radius:12px; padding:12px 6px; text-align:center; min-width:0;">
+              <div style="font-size:0.78rem; opacity:0.95; margin-bottom:6px; font-weight:600;">❓ Outros</div>
+              <div style="font-size:1.1rem; font-weight:800; line-height:1.1;">{fmt_brl(desp_outros_mes)}</div>
             </div>
           </div>
         </div>
       </div>
-      <div style="flex:1 1 160px;">{card_html(op_bg, op_shadow, op_icon, op_label, fmt_brl(abs(sobra_operacional)), op_extra)}</div>
-      <div style="flex:1 1 140px;">{inv_card}</div>
-      <div style="flex:1 1 160px;">{card_html(bal_bg, bal_shadow, bal_icon, bal_label, fmt_brl(abs(saldo_mes)), bal_extra)}</div>
+      <div style="flex:1 1 180px;">{card_html(op_bg, op_shadow, op_icon, op_label, fmt_brl(abs(sobra_operacional)), op_extra)}</div>
+      <div style="flex:1 1 160px;">{inv_card}</div>
+      <div style="flex:1 1 180px;">{card_html(bal_bg, bal_shadow, bal_icon, bal_label, fmt_brl(abs(saldo_mes)), bal_extra)}</div>
     </div>
     """, unsafe_allow_html=True)
 
