@@ -398,8 +398,8 @@ def gerar_projecao(df):
     media_rec_cat = df_base[df_base['Tipo'] == 'INCOME'].groupby('Categoria')['Valor_num'].sum() / n
 
     # Meses futuros para projeção
-    # Projetar APENAS meses verdadeiramente futuros (abril ja fechou - hoje 04/05/2026)
-    meses_futuros = ['2026-05', '2026-06', '2026-07', '2026-08', '2026-09', '2026-10']
+    # Projeta a partir do mes vigente (meses ja fechados ficam 100% reais, sem projecao)
+    meses_futuros = [(pd.to_datetime(mes_vigente + '-01') + pd.DateOffset(months=i)).strftime('%Y-%m') for i in range(6)]
 
     # Para meses que já têm dados reais, calcular o que já foi gasto por categoria
     # Projeção = estimado - já gasto (só adiciona a diferença)
@@ -841,7 +841,7 @@ elif pagina == "mes":
                 st.session_state.idx_mes -= 1
                 st.rerun()
     with col_mes_sel:
-        is_proj = meses_disponiveis[st.session_state.idx_mes] >= '2026-05'
+        is_proj = meses_disponiveis[st.session_state.idx_mes] >= datetime.now().strftime('%Y-%m')
         label_mes = mes_label_pt(meses_disponiveis[st.session_state.idx_mes])
         if is_proj:
             label_mes += " 🔮"
@@ -859,7 +859,7 @@ elif pagina == "mes":
                 st.rerun()
 
     mes_selecionado = meses_disponiveis[st.session_state.idx_mes]
-    is_projecao = mes_selecionado >= '2026-05'
+    is_projecao = mes_selecionado >= datetime.now().strftime('%Y-%m')
     df_mes = df[df['Ano_Mes'] == mes_selecionado]
     receitas_mes = df_mes[df_mes['Tipo'] == 'INCOME']
     despesas_mes = df_mes[df_mes['Tipo'] == 'EXPENSE']
