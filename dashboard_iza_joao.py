@@ -339,6 +339,14 @@ def load_data(file_path=None, uploaded_file=None):
     if col_desc:
         df = df.rename(columns={col_desc[0]: 'Descrição'})
 
+    # Open Finance duplica o emprestimo CDC BB (R$ 3.671,51/mes): alem do debito real
+    # "PGTO CDC 177175337-BB CREDITO AUTOMATICO" (o que vale), ele cria copias:
+    # "Installment N - EMPRESTIMO" (tipo DEBT) e "EMPRESTIMO CDC" (categoria Contas).
+    # Remove as copias pra nao contar a mesma divida 2-3x no mes.
+    _d = df['Descrição'].fillna('').str.upper().str.strip()
+    dup_cdc = (_d.str.contains('INSTALLMENT') & _d.str.contains('EMPRESTIMO')) | (_d == 'EMPRESTIMO CDC')
+    df = df[~dup_cdc].reset_index(drop=True)
+
     # DEBT = dívida — virar EXPENSE e forçar categoria Dividas
     mask_debt = df['Tipo'] == 'DEBT'
     df.loc[mask_debt, 'Categoria'] = 'Dividas'
@@ -416,7 +424,7 @@ def gerar_projecao(df):
     # BB consignado: R$ 1.886/mês até jun/28
     # Itaú Sob Medida: R$ 2.283/mês (já acabando jan/26, mas verificar)
     parcelas_conhecidas = {
-        'CDC BB': {'valor': 3671.51, 'ate': '2026-12'},
+        'CDC BB': {'valor': 3671.51, 'ate': '2026-08'},
         'Santander - Aparelho US (Joao)': {'valor': 2590, 'ate': '2026-12'},  # ate confirmar com Iza
     }
 
@@ -455,8 +463,8 @@ def gerar_projecao(df):
         # Após o fim, o valor é zerado na projeção
         DIVIDAS_COM_FIM = {
             'Dividas': {
-                # CDC BB R$3.671 + Santander R$2.590
-                'ate_dez26': 3672,   # CDC BB - remover a partir de jan/27
+                # CDC BB R$ 3.671,51/mes - ultima parcela ago/2026
+                'cdc_bb': 3671.51,   # remover a partir de set/26
             }
         }
 
@@ -467,9 +475,9 @@ def gerar_projecao(df):
             else:
                 valor_proj = VALORES_FIXOS.get(cat, val)
 
-            # Ajustar dívidas: Signature acaba em jun/26
-            if cat == 'Dividas' and mes > '2026-12':
-                valor_proj = max(0, valor_proj - DIVIDAS_COM_FIM['Dividas']['ate_dez26'])
+            # CDC BB acaba em ago/26: zera o valor a partir de set/26
+            if cat == 'Dividas' and mes > '2026-08':
+                valor_proj = max(0, valor_proj - DIVIDAS_COM_FIM['Dividas']['cdc_bb'])
 
             # Subtrair o que já foi gasto neste mês (dados reais do CSV)
             ja_gasto = gasto_real_por_mes_cat.get(mes, {}).get(cat, 0)
@@ -482,7 +490,7 @@ def gerar_projecao(df):
                 'Tipo': 'EXPENSE',
                 'Valor': f'R$ {restante:,.2f}',
                 'Valor_num': restante,
-                'Descrição': f'[Projeção] {cat}' + (' (sem CDC BB)' if cat == 'Dividas' and mes > '2026-12' else ''),
+                'Descrição': f'[Projeção] {cat}' + (' (sem CDC BB)' if cat == 'Dividas' and mes > '2026-08' else ''),
                 'Categoria': cat,
                 'Conta': 'Projeção',
                 'Tipo_Despesa': classificar_tipo_despesa(cat),
@@ -587,6 +595,7 @@ meses_disponiveis = sorted(df['Ano_Mes'].unique())
 if pagina == "patrimonio":
     st.subheader(":material/account_balance: Patrimônio total — onde está o dinheiro de vocês?")
     st.caption("Foto do que vocês têm em cada conta ao longo do tempo. Esta é a verdade do que sobrou de fato.")
+    st.caption("📅 Jun/26: BB e Inter atualizados com extratos reais (aporte de R$ 7k entrou na reserva). ⚠️ PJ Caixa ainda no saldo de abril (sem extrato de mai/jun) e a reserva Inter é estimada (print abr + aporte, sem rendimento).")
 
     # Saldos REAIS dos extratos (atualizar conforme novos extratos)
     # Use 0 quando nao tiver dado (ao inves de None) pra evitar NaN nos calculos
@@ -599,6 +608,9 @@ if pagina == "patrimonio":
         {"Data": "31/03/2026", "PJ Caixa": 34201, "BB CC": 13063, "Inter CC": 53, "Inter Investimentos": 95000, "Inter PJ Nova": 4840},
         # Abril: PJ Caixa so temos ate 09/04 (R$ 9.572). Inter PJ nova nao temos dado novo - usa o de 31/03
         {"Data": "30/04/2026", "PJ Caixa": 9572, "BB CC": 8624, "Inter CC": 471, "Inter Investimentos": 99693, "Inter PJ Nova": 4840},
+        # Jun/26 (extratos reais): BB 31/05, Inter CC 02/06 (7k -> CDB), Inter PJ 28/05.
+        # Inter Investimentos = print abr (99.693) + aporte jun (7.000), sem rendimento. PJ Caixa: sem extrato mai/jun, mantem abril.
+        {"Data": "08/06/2026", "PJ Caixa": 9572, "BB CC": 2557, "Inter CC": 325, "Inter Investimentos": 106693, "Inter PJ Nova": 9429},
     ])
     saldos["TOTAL"] = saldos[["PJ Caixa", "BB CC", "Inter CC", "Inter Investimentos", "Inter PJ Nova"]].sum(axis=1)
 
@@ -1403,33 +1415,22 @@ elif pagina == "detalhe":
         rec = rec_media * 0.95
         desp = desp_media
 
-        # Parcelas de cartão (das faturas de março)
-        # BB: SgGrifeBourbo 3/10 R$153, Mercadopago 2x ~R$55, SuncoastUSA 1/10 R$1.356, Anuidade 6/12 R$83
-        parc_bb = 153.50 + 24.85 + 29.98 + 83.00  # acabam ~jun/26
-        parc_bb_suncoast = 1356.24  # acaba ~dez/26 (9 restantes)
-        # Casas Bahia 2x R$393 (acaba ~jul/26)
-        parc_casas_bahia = 392.99 if mes <= '2026-07' else 0
-        # Patricia Leite R$157 (acaba ~dez/26)
-        parc_patricia = 157.00
-        # Hoteis.com R$1.366 (acaba ~mai/26)
-        parc_hotel = 1365.56 if mes <= '2026-04' else 0  # 02/04, acaba mai/26
+        # Empréstimos reais do casal (seção "Situação das dívidas")
+        cdc_bb = 3671.51 if mes <= '2026-08' else 0   # CDC BB - última parcela ago/26
+        caixa_elo = 3710 if mes <= '2026-10' else 0   # Empréstimo Cartão Caixa Elo - acaba out/26
+        santander_us = 2590                            # Aparelho US Santander - prazo a confirmar
 
-        # Signature: R$ 1.348/mês (acaba jun/26)
-        sig = 1347.60 if mes <= '2026-06' else 0
-        # BB consignado: R$ 1.886/mês (até jun/28)
-        bb = 1886
-
-        # Alívio após fim das parcelas
-        alivio_sig = 1348 if mes > '2026-06' else 0
-        saldo = rec - desp + alivio_sig
+        # Alívio conforme as dívidas terminam (saem da média de despesa)
+        alivio = (3671.51 if mes > '2026-08' else 0) + (3710 if mes > '2026-10' else 0)
+        saldo = rec - desp + alivio
 
         dados_proj.append({
             'Mês': label,
-            'Entra': rec, 'Sai': desp - alivio_sig,
+            'Entra': rec, 'Sai': desp - alivio,
             'Sobra': saldo,
-            'Signature': f'R$ {sig:,.0f}' if sig > 0 else 'Quitado ✅',
-            'BB Consig.': f'R$ {bb:,.0f}',
-            'Parcelas cartão': f'R$ {parc_bb + parc_bb_suncoast + parc_casas_bahia + parc_patricia + parc_hotel:,.0f}',
+            'CDC BB': f'R$ {cdc_bb:,.0f}' if cdc_bb > 0 else 'Quitado ✅',
+            'Caixa Elo': f'R$ {caixa_elo:,.0f}' if caixa_elo > 0 else 'Quitado ✅',
+            'Aparelho US': f'R$ {santander_us:,.0f}',
         })
 
     df_proj = pd.DataFrame(dados_proj)
@@ -1440,9 +1441,9 @@ elif pagina == "detalhe":
             "Entra": st.column_config.NumberColumn("Entra", format="R$ %.0f"),
             "Sai": st.column_config.NumberColumn("Sai", format="R$ %.0f"),
             "Sobra": st.column_config.NumberColumn("Sobra", format="R$ %.0f"),
-            "Signature": st.column_config.TextColumn("Parc. Signature"),
-            "BB Consig.": st.column_config.TextColumn("BB Consignado"),
-            "Parcelas cartão": st.column_config.TextColumn("Parcelas cartão"),
+            "CDC BB": st.column_config.TextColumn("CDC BB"),
+            "Caixa Elo": st.column_config.TextColumn("Cartão Caixa Elo"),
+            "Aparelho US": st.column_config.TextColumn("Aparelho US (Santander)"),
         }
     )
 
@@ -1453,46 +1454,28 @@ elif pagina == "detalhe":
     meses_timeline = ['Abr/26', 'Mai/26', 'Jun/26', 'Jul/26', 'Ago/26', 'Set/26',
                       'Out/26', 'Nov/26', 'Dez/26', 'Jan/27', 'Fev/27', 'Mar/27']
 
-    # Parcelas cartão por mês (baseado nas faturas)
-    suncoast =    [1356, 1356, 1356, 1356, 1356, 1356, 1356, 1356, 1356, 0, 0, 0]  # até dez/26
-    hoteis =      [1366, 1366, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]  # até mai/26 (02/04)
-    casas_bahia = [393, 393, 393, 393, 393, 0, 0, 0, 0, 0, 0, 0]  # até ago/26
-    sg_grife =    [154, 154, 154, 0, 0, 0, 0, 0, 0, 0, 0, 0]  # até jun/26
-    mercadopago = [55, 55, 55, 0, 0, 0, 0, 0, 0, 0, 0, 0]  # até jun/26
-    patricia =    [157, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]  # até abr/26 (11/12)
-    anuidade_bb = [83, 83, 83, 83, 83, 83, 0, 0, 0, 0, 0, 0]  # até set/26
-    petz =        [7, 7, 7, 7, 7, 7, 0, 0, 0, 0, 0, 0]  # até set/26
-
-    # Empréstimos
-    signature =   [1348, 1348, 1348, 0, 0, 0, 0, 0, 0, 0, 0, 0]  # até jun/26
-    bb_consig =   [1886, 1886, 1886, 1886, 1886, 1886, 1886, 1886, 1886, 1886, 1886, 1886]  # até jun/28
+    # Empréstimos reais do casal (seção "Situação das dívidas")
+    # índice: 0=Abr 1=Mai 2=Jun 3=Jul 4=Ago 5=Set 6=Out 7=Nov 8=Dez 9=Jan 10=Fev 11=Mar
+    cdc_bb_t =    [3672, 3672, 3672, 3672, 3672, 0, 0, 0, 0, 0, 0, 0]  # CDC BB - última parcela ago/26
+    caixa_elo_t = [3710, 3710, 3710, 3710, 3710, 3710, 3710, 0, 0, 0, 0, 0]  # Cartão Caixa Elo - acaba out/26
+    santander_t = [2590, 2590, 2590, 2590, 2590, 2590, 2590, 2590, 2590, 2590, 2590, 2590]  # Aparelho US - prazo a confirmar
 
     fig_parc = go.Figure()
 
-    # Empréstimos (cores mais fortes)
-    fig_parc.add_trace(go.Bar(name='BB Consignado (R$ 1.886)', x=meses_timeline, y=bb_consig,
-                              marker_color='#2d3436', text=[f'{v/1000:.1f}k' if v > 0 else '' for v in bb_consig],
+    fig_parc.add_trace(go.Bar(name='CDC BB (R$ 3.672)', x=meses_timeline, y=cdc_bb_t,
+                              marker_color='#d63031', text=[f'{v/1000:.1f}k' if v > 0 else '' for v in cdc_bb_t],
                               textposition='inside', textfont=dict(size=13, color='white')))
-    fig_parc.add_trace(go.Bar(name='Signature (R$ 1.348)', x=meses_timeline, y=signature,
-                              marker_color='#d63031', text=[f'{v/1000:.1f}k' if v > 0 else '' for v in signature],
+    fig_parc.add_trace(go.Bar(name='Cartão Caixa Elo (R$ 3.710)', x=meses_timeline, y=caixa_elo_t,
+                              marker_color='#e17055', text=[f'{v/1000:.1f}k' if v > 0 else '' for v in caixa_elo_t],
                               textposition='inside', textfont=dict(size=13, color='white')))
-
-    # Parcelas cartão (cores mais suaves)
-    fig_parc.add_trace(go.Bar(name='SuncoastUSA (R$ 1.356)', x=meses_timeline, y=suncoast,
-                              marker_color='#e17055'))
-    fig_parc.add_trace(go.Bar(name='Hotéis.com (R$ 1.366)', x=meses_timeline, y=hoteis,
-                              marker_color='#fdcb6e'))
-    fig_parc.add_trace(go.Bar(name='Casas Bahia (R$ 393)', x=meses_timeline, y=casas_bahia,
-                              marker_color='#74b9ff'))
-    fig_parc.add_trace(go.Bar(name='Outras parcelas', x=meses_timeline,
-                              y=[sum(x) for x in zip(sg_grife, mercadopago, patricia, anuidade_bb, petz)],
-                              marker_color='#b2bec3'))
+    fig_parc.add_trace(go.Bar(name='Aparelho US Santander (R$ 2.590)', x=meses_timeline, y=santander_t,
+                              marker_color='#6c5ce7', text=[f'{v/1000:.1f}k' if v > 0 else '' for v in santander_t],
+                              textposition='inside', textfont=dict(size=13, color='white')))
 
     # Total por mês como texto no topo
     totais = []
     for i in range(len(meses_timeline)):
-        t = bb_consig[i] + signature[i] + suncoast[i] + hoteis[i] + casas_bahia[i] + \
-            sg_grife[i] + mercadopago[i] + patricia[i] + anuidade_bb[i] + petz[i]
+        t = cdc_bb_t[i] + caixa_elo_t[i] + santander_t[i]
         totais.append(t)
 
     fig_parc.add_trace(go.Scatter(
@@ -1519,11 +1502,11 @@ elif pagina == "detalhe":
     st.markdown("**Alívio progressivo:**")
     col_a1, col_a2, col_a3 = st.columns(3)
     with col_a1:
-        st.metric("Hoje (Abr/26)", fmt_brl(totais[0]), border=True)
+        st.metric("Hoje", fmt_brl(totais[0]), border=True)
     with col_a2:
-        st.metric("Jul/26", fmt_brl(totais[3]), f"-{fmt_brl(totais[0]-totais[3])}/mês", border=True)
+        st.metric("Set/26 (CDC quitado)", fmt_brl(totais[5]), f"-{fmt_brl(totais[0]-totais[5])}/mês", border=True)
     with col_a3:
-        st.metric("Jan/27", fmt_brl(totais[9]), f"-{fmt_brl(totais[0]-totais[9])}/mês", border=True)
+        st.metric("Nov/26 (Caixa Elo quitado)", fmt_brl(totais[7]), f"-{fmt_brl(totais[0]-totais[7])}/mês", border=True)
 
 
 # ============================================================
@@ -1650,19 +1633,20 @@ elif pagina == "alertas":
             {"Data": "28/03/2026", "Tipo": "Aporte CDB", "Valor": "R$ 1.400", "Produto": "CDB POS DI LIQ", "Obs": ""},
             {"Data": "08/04/2026", "Tipo": "Resgate", "Valor": "+R$ 3.377", "Produto": "CDB PRE 252 TBE", "Obs": "Vencimento"},
             {"Data": "08/04/2026", "Tipo": "Aporte LCI", "Valor": "R$ 3.000", "Produto": "LCI DI 720", "Obs": "Realocação CDB→LCI"},
+            {"Data": "02/06/2026", "Tipo": "Aporte CDB", "Valor": "R$ 7.000", "Produto": "CDB Porq Obj", "Obs": "Retomada do aporte (maio sem aporte)"},
         ]),
         use_container_width=True, hide_index=True,
     )
 
     col_inv1, col_inv2, col_inv3 = st.columns(3)
     with col_inv1:
-        st.metric("Total aplicado", "R$ 51.400", "+R$ 51.400 desde dez/25", border=True)
+        st.metric("Total aplicado", "R$ 58.400", "+R$ 7.000 em jun/26 (CDB)", border=True)
     with col_inv2:
-        st.metric("Saldo atual (06/abr)", "R$ 99.693", "Print Inter Investimentos", border=True)
+        st.metric("Reserva atual (jun)", "R$ 106.693", "estimado: print abr + aporte 7k", border=True)
     with col_inv3:
         st.metric("Crescimento patrimônio", "~R$ 50k", "vs dez/25 (~R$ 50k)", border=True)
 
-    st.info("📊 **Reserva dobrou de ~R$ 50k para ~R$ 100k** (jan-abr/2026). Aportes desaceleraram em abr (só R$ 3k em LCI). Inclui depósito em juízo (processo apartamento).", icon="💰")
+    st.info("📊 **Reserva dobrou de ~R$ 50k para ~R$ 100k** (jan-abr/2026). Aportes desaceleraram em abr (R$ 3k em LCI), **zeraram em maio** e **retomaram em jun com R$ 7k** (CDB). Inclui depósito em juízo (processo apartamento).", icon="💰")
 
     st.subheader(":material/savings: Onde podem economizar")
 
