@@ -1310,7 +1310,7 @@ elif pagina == "detalhe":
         fig_hist.add_hline(y=0, line_dash="dash", line_color="gray", opacity=0.5)
 
         # Linha separando passado (real)/futuro (projecao) - Abril ja eh real
-        mes_corte = '2026-04'
+        mes_corte = (pd.Timestamp(datetime.now().strftime('%Y-%m') + '-01') - pd.DateOffset(months=1)).strftime('%Y-%m')
         if mes_corte in meses_hist:
             idx_corte = meses_hist.index(mes_corte)
             fig_hist.add_vline(x=idx_corte + 0.5, line_dash="dot", line_color="#6c5ce7", line_width=2, opacity=0.8)
@@ -1384,10 +1384,11 @@ elif pagina == "detalhe":
 
     # Projeção
     st.subheader(":material/auto_graph: Projeção dos próximos meses")
-    st.caption("Baseado na média de Set/25 a Fev/26 (últimos 6 meses reais)")
+    st.caption("Baseado na média dos últimos 6 meses reais")
 
-    meses_reais_proj = sorted([m for m in df['Ano_Mes'].unique() if m < '2026-05'])
-    meses_proj = ['2026-05', '2026-06', '2026-07', '2026-08', '2026-09']
+    _mv_proj = datetime.now().strftime('%Y-%m')
+    meses_reais_proj = sorted([m for m in df['Ano_Mes'].unique() if m < _mv_proj])
+    meses_proj = [(pd.Timestamp(_mv_proj + '-01') + pd.DateOffset(months=i)).strftime('%Y-%m') for i in range(5)]
     ultimos_6m_det = meses_reais_proj[-6:] if len(meses_reais_proj) >= 6 else meses_reais_proj
     df_base_det = df[df['Ano_Mes'].isin(ultimos_6m_det)]
 
@@ -1396,8 +1397,9 @@ elif pagina == "detalhe":
 
     # Dívidas e parcelas conhecidas (Notion + faturas)
     dados_proj = []
-    for mes, label in [('2026-04', 'Abr/26'), ('2026-05', 'Mai/26'), ('2026-06', 'Jun/26'),
-                        ('2026-07', 'Jul/26'), ('2026-08', 'Ago/26'), ('2026-09', 'Set/26')]:
+    _proj_meses = [(pd.Timestamp(datetime.now().strftime('%Y-%m') + '-01') + pd.DateOffset(months=i)).strftime('%Y-%m') for i in range(6)]
+    for mes in _proj_meses:
+        label = mes_label_curto(mes)
         rec = rec_media * 0.95
         desp = desp_media
 
@@ -1580,7 +1582,7 @@ elif pagina == "alertas":
     # ── EMPRÉSTIMOS ──
     st.subheader(":material/account_balance: Empréstimos")
 
-    resumo = df[df['Ano_Mes'] < '2026-05'].groupby(['Ano_Mes', 'Tipo'])['Valor_num'].sum().unstack(fill_value=0)
+    resumo = df[df['Ano_Mes'] < datetime.now().strftime('%Y-%m')].groupby(['Ano_Mes', 'Tipo'])['Valor_num'].sum().unstack(fill_value=0)
     if 'INCOME' not in resumo.columns:
         resumo['INCOME'] = 0
     if 'EXPENSE' not in resumo.columns:
@@ -1605,7 +1607,7 @@ elif pagina == "alertas":
     with col2:
         with st.container(border=True):
             st.markdown("**Maiores gastos (período todo)**")
-            desp_all = df[(df['Tipo'] == 'EXPENSE') & (df['Ano_Mes'] < '2026-04')]
+            desp_all = df[(df['Tipo'] == 'EXPENSE') & (df['Ano_Mes'] < datetime.now().strftime('%Y-%m'))]
             top_cats = desp_all.groupby('Categoria_Mae')['Valor_num'].sum().sort_values(ascending=False).head(5)
             n_meses_total = desp_all['Ano_Mes'].nunique()
             medals = ['1°', '2°', '3°', '4°', '5°']
@@ -1664,8 +1666,9 @@ elif pagina == "alertas":
 
     st.subheader(":material/savings: Onde podem economizar")
 
-    n_meses_real = max(df[df['Ano_Mes'] < '2026-05']['Ano_Mes'].nunique(), 1)
-    desp_real = df[(df['Tipo'] == 'EXPENSE') & (df['Ano_Mes'] < '2026-05')]
+    _mv_econ = datetime.now().strftime('%Y-%m')
+    n_meses_real = max(df[df['Ano_Mes'] < _mv_econ]['Ano_Mes'].nunique(), 1)
+    desp_real = df[(df['Tipo'] == 'EXPENSE') & (df['Ano_Mes'] < _mv_econ)]
 
     col1, col2, col3 = st.columns(3)
     with col1:
