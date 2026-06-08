@@ -1,4 +1,4 @@
-Data,Tipo,Valor,Descrição,Status,Categoria,Conta,Recorrente,Tipo_Recorrência,Limite_Recorrência,Data_Criação,Data_Atualização
+﻿Data,Tipo,Valor,Descrição,Status,Categoria,Conta,Recorrente,Tipo_Recorrência,Limite_Recorrência,Data_Criação,Data_Atualização
 "02/12/2026","EXPENSE","R$ 574,40","MP*FUNILARIA2 PARC 01/10 OSASCO      BR","PENDING","João filho","Cartão BB-OUROCARD VISA INTERNATIONAL - JOAO PEDRO MAGALHAES FERNANDES","Sim","MONTH","2027-02-02","04/05/2026 20:12","04/05/2026 20:12"
 "02/12/2026","EXPENSE","R$ 252,33","TIM           PARC  SAO PAULO   BR","PENDING","Tecnologia / Diversas","Cartão BB-OUROCARD VISA INTERNATIONAL - JOAO PEDRO MAGALHAES FERNANDES","Sim","MONTH","2027-03-02","14/01/2026 12:33","14/01/2026 12:33"
 "02/12/2026","EXPENSE","R$ 527,34","KdmCasasPre   PARC  CAMBORIU    BR","PENDING","Compras Moradia","Cartão BB-OUROCARD VISA INTERNATIONAL - JOAO PEDRO MAGALHAES FERNANDES","Sim","MONTH","2027-02-02","30/01/2026 10:21","30/01/2026 10:21"
@@ -276,7 +276,7 @@ Data,Tipo,Valor,Descrição,Status,Categoria,Conta,Recorrente,Tipo_Recorrência,
 "02/06/2026","EXPENSE","R$ 8,50","TAR PIX","PAID","IOF / Tarifas","CAIXA PJ- IZABELA ANDRADE FERREIRA","Não","","","03/06/2026 16:36","03/06/2026 16:36"
 "02/06/2026","INCOME","R$ 216,99","Depósito InfinitePay - Vendas","PAID","Váriável (Consultório / Laudos )","InfinitePay -","Não","","","08/06/2026 17:00","08/06/2026 17:00"
 "02/06/2026","INCOME","R$ 2.828,02","Depósito InfinitePay - Vendas","PAID","Váriável (Consultório / Laudos )","InfinitePay -","Não","","","08/06/2026 17:00","08/06/2026 17:00"
-"02/06/2026","EXPENSE","R$ 7.000,00","Aplicacao: "CDB Porq Obj BANCO INTER SA"","PAID","","Conta Corrente - IZABELA ANDRADE FERREIRA","Não","","","08/06/2026 17:20","08/06/2026 17:20"
+"02/06/2026","INVESTMENT","R$ 7.000,00","Aplicacao: "CDB Porq Obj BANCO INTER SA"","PAID","","Conta Corrente - IZABELA ANDRADE FERREIRA","Não","","","08/06/2026 17:20","08/06/2026 17:20"
 "02/06/2026","EXPENSE","R$ 252,33","TIM           PARC  SAO PAULO   BR","PENDING","Tecnologia / Diversas","Cartão BB-OUROCARD VISA INTERNATIONAL - JOAO PEDRO MAGALHAES FERNANDES","Sim","MONTH","2027-03-02","14/01/2026 12:33","14/01/2026 12:33"
 "02/06/2026","EXPENSE","R$ 527,34","KdmCasasPre   PARC  CAMBORIU    BR","PENDING","Compras Moradia","Cartão BB-OUROCARD VISA INTERNATIONAL - JOAO PEDRO MAGALHAES FERNANDES","Sim","MONTH","2027-02-02","30/01/2026 10:21","30/01/2026 10:21"
 "02/06/2026","EXPENSE","R$ 399,00","SC BETONEIRAS PARC  GASPAR      BR","PENDING","João filho","Cartão BB-OUROCARD VISA INTERNATIONAL - JOAO PEDRO MAGALHAES FERNANDES","Sim","MONTH","2027-02-02","19/02/2026 13:38","04/05/2026 20:15"
