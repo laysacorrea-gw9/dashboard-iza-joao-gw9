@@ -425,13 +425,11 @@ def gerar_projecao(df):
             gasto_real_por_mes_cat[mes] = df_mes_real[df_mes_real['Tipo'] == 'EXPENSE'].groupby('Categoria')['Valor_num'].sum().to_dict()
             rec_real_por_mes_cat[mes] = df_mes_real[df_mes_real['Tipo'] == 'INCOME'].groupby('Categoria')['Valor_num'].sum().to_dict()
 
-    # Parcelas conhecidas do casal (das faturas)
-    # Signature: R$ 1.347,60/mês até jun/26 (parcela 12/12)
-    # BB consignado: R$ 1.886/mês até jun/28
-    # Itaú Sob Medida: R$ 2.283/mês (já acabando jan/26, mas verificar)
+    # Dividas conhecidas do casal (extratos + sessao 08/06)
     parcelas_conhecidas = {
         'CDC BB': {'valor': 3671.51, 'ate': '2026-08'},
         'Santander - Aparelho US (Joao)': {'valor': 2590, 'ate': '2026-12'},  # ate confirmar com Iza
+        'FIES renegociado': {'valor': 4889.36, 'ate': '2027-08'},  # 15 parcelas desde jun/26
     }
 
     rows = []
@@ -601,7 +599,7 @@ meses_disponiveis = sorted(df['Ano_Mes'].unique())
 if pagina == "patrimonio":
     st.subheader(":material/account_balance: Patrimônio total — onde está o dinheiro de vocês?")
     st.caption("Foto do que vocês têm em cada conta ao longo do tempo. Esta é a verdade do que sobrou de fato.")
-    st.caption("📅 Jun/26: BB e Inter atualizados com extratos reais (aporte de R$ 7k entrou na reserva). ⚠️ PJ Caixa ainda no saldo de abril (sem extrato de mai/jun) e a reserva Inter é estimada (print abr + aporte, sem rendimento).")
+    st.caption("📅 30/06: todos os saldos vêm de extratos reais (Caixa PJ, BB, Inter CC, Inter PJ). A reserva Inter Investimentos é estimada: print de abril (R$ 99.693) + aportes de junho (R$ 15k), sem contar rendimento.")
 
     # Saldos REAIS dos extratos (atualizar conforme novos extratos)
     # Use 0 quando nao tiver dado (ao inves de None) pra evitar NaN nos calculos
@@ -614,9 +612,9 @@ if pagina == "patrimonio":
         {"Data": "31/03/2026", "PJ Caixa": 34201, "BB CC": 13063, "Inter CC": 53, "Inter Investimentos": 95000, "Inter PJ Nova": 4840},
         # Abril: PJ Caixa so temos ate 09/04 (R$ 9.572). Inter PJ nova nao temos dado novo - usa o de 31/03
         {"Data": "30/04/2026", "PJ Caixa": 9572, "BB CC": 8624, "Inter CC": 471, "Inter Investimentos": 99693, "Inter PJ Nova": 4840},
-        # Jun/26 (extratos reais): BB 31/05, Inter CC 02/06 (7k -> CDB), Inter PJ 28/05.
-        # Inter Investimentos = print abr (99.693) + aporte jun (7.000), sem rendimento. PJ Caixa: sem extrato mai/jun, mantem abril.
-        {"Data": "08/06/2026", "PJ Caixa": 9572, "BB CC": 2557, "Inter CC": 325, "Inter Investimentos": 106693, "Inter PJ Nova": 9429},
+        # 30/06 (extratos reais): Caixa PJ 30/06 (67.059,63), BB 30/06 (725,35), Inter CC 26/06 (579,17), Inter PJ 29/06 (13.880,43).
+        # Inter Investimentos = print abr (99.693) + aportes jun (7k+8k), sem rendimento (estimado).
+        {"Data": "30/06/2026", "PJ Caixa": 67060, "BB CC": 725, "Inter CC": 579, "Inter Investimentos": 114693, "Inter PJ Nova": 13880},
     ])
     saldos["TOTAL"] = saldos[["PJ Caixa", "BB CC", "Inter CC", "Inter Investimentos", "Inter PJ Nova"]].sum(axis=1)
 
@@ -798,14 +796,21 @@ if pagina == "patrimonio":
             cor_t = "#d63031" if var_total < 0 else ("#fdcb6e" if var_total < 5000 else "#00b894")
             sinal_t = "" if var_total < 0 else "+"
             st.markdown(f"<div style='font-size:1.8rem; font-weight:800; color:{cor_t};'>{sinal_t}{fmt_brl(var_total)}</div>", unsafe_allow_html=True)
-            sub = "Líquido NEGATIVO" if var_total < 0 else ("(quase) sem mudança" if var_total < 5000 else "Crescimento real")
-            st.caption(f"{sub} — foi reorganização, não geração de riqueza nova")
+            sub = "Líquido NEGATIVO" if var_total < 0 else ("(quase) sem mudança — reorganização, não riqueza nova" if var_total < 5000 else "Crescimento real de patrimônio")
+            st.caption(sub)
 
-    st.info("""
+    if var_total < 5000:
+        st.info("""
     💡 **A leitura correta:** Vocês estão em uma fase de **reorganização patrimonial**.
     Tiraram dinheiro parado na PJ (que rendia 0%) e colocaram em CDB/LCI (que rende ~CDI).
     Isso é positivo para quem está construindo reserva. Mas **ainda não há geração líquida de riqueza**:
     o que entra é praticamente igual ao que sai. Para crescer, precisa abrir gap entre receita e despesa.
+    """, icon="🎯")
+    else:
+        st.info(f"""
+    💡 **A leitura correta:** além da reorganização (dinheiro da PJ indo pra CDB/LCI que rende ~CDI),
+    houve **geração real de riqueza no período: {fmt_brl(var_total)}**. O que entrou superou o que saiu,
+    e a diferença virou reserva. O desafio agora é manter esse ritmo com os aportes programados de R$ 5 mil/mês.
     """, icon="🎯")
 
     st.markdown("---")
@@ -1425,6 +1430,7 @@ elif pagina == "detalhe":
         cdc_bb = 3671.51 if mes <= '2026-08' else 0   # CDC BB - última parcela ago/26
         caixa_elo = 3710 if mes <= '2026-10' else 0   # Empréstimo Cartão Caixa Elo - acaba out/26
         santander_us = 2590                            # Aparelho US Santander - prazo a confirmar
+        fies = 4889.36 if '2026-06' <= mes <= '2027-08' else 0  # FIES renegociado - 15 parcelas
 
         # Alívio conforme as dívidas terminam (saem da média de despesa)
         alivio = (3671.51 if mes > '2026-08' else 0) + (3710 if mes > '2026-10' else 0)
@@ -1437,6 +1443,7 @@ elif pagina == "detalhe":
             'CDC BB': f'R$ {cdc_bb:,.0f}' if cdc_bb > 0 else 'Quitado ✅',
             'Caixa Elo': f'R$ {caixa_elo:,.0f}' if caixa_elo > 0 else 'Quitado ✅',
             'Aparelho US': f'R$ {santander_us:,.0f}',
+            'FIES': f'R$ {fies:,.0f}' if fies > 0 else '—',
         })
 
     df_proj = pd.DataFrame(dados_proj)
@@ -1450,6 +1457,7 @@ elif pagina == "detalhe":
             "CDC BB": st.column_config.TextColumn("CDC BB"),
             "Caixa Elo": st.column_config.TextColumn("Cartão Caixa Elo"),
             "Aparelho US": st.column_config.TextColumn("Aparelho US (Santander)"),
+            "FIES": st.column_config.TextColumn("FIES reneg."),
         }
     )
 
@@ -1465,6 +1473,7 @@ elif pagina == "detalhe":
     cdc_bb_t =    [3672, 3672, 3672, 3672, 3672, 0, 0, 0, 0, 0, 0, 0]  # CDC BB - última parcela ago/26
     caixa_elo_t = [3710, 3710, 3710, 3710, 3710, 3710, 3710, 0, 0, 0, 0, 0]  # Cartão Caixa Elo - acaba out/26
     santander_t = [2590, 2590, 2590, 2590, 2590, 2590, 2590, 2590, 2590, 2590, 2590, 2590]  # Aparelho US - prazo a confirmar
+    fies_t =      [0, 0, 4889, 4889, 4889, 4889, 4889, 4889, 4889, 4889, 4889, 4889]  # FIES renegociado - 15 parcelas jun/26 a ago/27
 
     fig_parc = go.Figure()
 
@@ -1477,11 +1486,14 @@ elif pagina == "detalhe":
     fig_parc.add_trace(go.Bar(name='Aparelho US Santander (R$ 2.590)', x=meses_timeline, y=santander_t,
                               marker_color='#6c5ce7', text=[f'{v/1000:.1f}k' if v > 0 else '' for v in santander_t],
                               textposition='inside', textfont=dict(size=13, color='white')))
+    fig_parc.add_trace(go.Bar(name='FIES renegociado (R$ 4.889)', x=meses_timeline, y=fies_t,
+                              marker_color='#fdcb6e', text=[f'{v/1000:.1f}k' if v > 0 else '' for v in fies_t],
+                              textposition='inside', textfont=dict(size=13, color='#2d3436')))
 
     # Total por mês como texto no topo
     totais = []
     for i in range(len(meses_timeline)):
-        t = cdc_bb_t[i] + caixa_elo_t[i] + santander_t[i]
+        t = cdc_bb_t[i] + caixa_elo_t[i] + santander_t[i] + fies_t[i]
         totais.append(t)
 
     fig_parc.add_trace(go.Scatter(
@@ -1610,10 +1622,10 @@ elif pagina == "alertas":
 
     st.dataframe(
         pd.DataFrame([
-            {"Dívida": "CDC BB (contrato 177175337)", "Parcela": "R$ 3.672", "Sai dia": "5", "Conta": "BB CC (João)", "Status": "Acaba jun/26 (parcela 6) — pedida simulação quitação"},
+            {"Dívida": "CDC BB (contrato 177175337)", "Parcela": "R$ 3.672", "Sai dia": "5", "Conta": "BB CC (João)", "Status": "Última parcela AGO/26 🎯"},
             {"Dívida": "🔬 Aparelho Ultrassom (Santander)", "Parcela": "R$ 2.590", "Sai dia": "6-9", "Conta": "BB CC (João)", "Status": "Equipamento médico do consultório do João — confirmar saldo/prazo"},
             {"Dívida": "💳 Empréstimo Cartão Caixa Elo (Iza)", "Parcela": "R$ 3.710", "Sai dia": "7", "Conta": "Cartão Caixa Elo (Iza)", "Status": "10 parcelas, acaba out/26 — fatura parcelada"},
-            {"Dívida": "FIES (Izabela)", "Parcela": "Suspenso", "Sai dia": "—", "Conta": "—", "Status": "Em análise — possível abatimento COVID"},
+            {"Dívida": "🎓 FIES renegociado (Izabela)", "Parcela": "R$ 4.889", "Sai dia": "9", "Conta": "BB CC", "Status": "Renegociado de R$ 302k → R$ 77k 👏 Entrada paga 29/05; 15 parcelas, acaba ago/27"},
         ]),
         use_container_width=True, hide_index=True,
         column_config={
@@ -1625,7 +1637,7 @@ elif pagina == "alertas":
         }
     )
 
-    st.error("**💸 Dívidas mensais fixas atuais: R$ 9.972** (CDC BB R$ 3.672 + Aparelho US Santander R$ 2.590 + Empréstimo Cartão Caixa Elo R$ 3.710)\n\n📅 **Cronograma de alívio:**\n- **Jun/26**: CDC BB acaba → -R$ 3.672/mês (sobra R$ 6.300)\n- **Out/26**: Cartão Caixa acaba → -R$ 3.710/mês (sobra R$ 2.590, só Aparelho US)\n\n📌 **A confirmar com a Iza:** saldo devedor + prazo do financiamento do Aparelho US (Santander)", icon="🚨")
+    st.error("**💸 Dívidas mensais fixas atuais: R$ 14.861** (CDC BB R$ 3.672 + Aparelho US Santander R$ 2.590 + Empréstimo Cartão Caixa Elo R$ 3.710 + FIES R$ 4.889)\n\n📅 **Cronograma de alívio:**\n- **Ago/26**: CDC BB acaba → -R$ 3.672/mês (fica R$ 11.189)\n- **Out/26**: Cartão Caixa acaba → -R$ 3.710/mês (fica R$ 7.479)\n- **Ago/27**: FIES acaba → -R$ 4.889/mês (fica R$ 2.590, só Aparelho US)\n\n📌 **A confirmar com a Iza:** saldo devedor + prazo do financiamento do Aparelho US (Santander)", icon="🚨")
 
     # ── INVESTIMENTOS / RESERVA ──
     st.subheader(":material/savings: Investimentos e Reserva (Inter)")
@@ -1640,19 +1652,20 @@ elif pagina == "alertas":
             {"Data": "08/04/2026", "Tipo": "Resgate", "Valor": "+R$ 3.377", "Produto": "CDB PRE 252 TBE", "Obs": "Vencimento"},
             {"Data": "08/04/2026", "Tipo": "Aporte LCI", "Valor": "R$ 3.000", "Produto": "LCI DI 720", "Obs": "Realocação CDB→LCI"},
             {"Data": "02/06/2026", "Tipo": "Aporte CDB", "Valor": "R$ 7.000", "Produto": "CDB Porq Obj", "Obs": "Retomada do aporte (maio sem aporte)"},
+            {"Data": "26/06/2026", "Tipo": "Aporte CDB", "Valor": "R$ 8.000", "Produto": "CDB POS DI LIQ", "Obs": ""},
         ]),
         use_container_width=True, hide_index=True,
     )
 
     col_inv1, col_inv2, col_inv3 = st.columns(3)
     with col_inv1:
-        st.metric("Total aplicado", "R$ 58.400", "+R$ 7.000 em jun/26 (CDB)", border=True)
+        st.metric("Total aplicado", "R$ 66.400", "+R$ 15.000 em jun/26 (CDB 7k + 8k)", border=True)
     with col_inv2:
-        st.metric("Reserva atual (jun)", "R$ 106.693", "estimado: print abr + aporte 7k", border=True)
+        st.metric("Reserva atual (jun)", "R$ 114.693", "estimado: print abr + aportes jun 15k", border=True)
     with col_inv3:
         st.metric("Crescimento patrimônio", "~R$ 50k", "vs dez/25 (~R$ 50k)", border=True)
 
-    st.info("📊 **Reserva dobrou de ~R$ 50k para ~R$ 100k** (jan-abr/2026). Aportes desaceleraram em abr (R$ 3k em LCI), **zeraram em maio** e **retomaram em jun com R$ 7k** (CDB). Inclui depósito em juízo (processo apartamento).", icon="💰")
+    st.info("📊 **Reserva mais que dobrou: de ~R$ 50k para ~R$ 115k** (jan-jun/2026). Aportes desaceleraram em abr (R$ 3k), **zeraram em maio** e **retomaram forte em jun com R$ 15k** (CDB 7k + 8k). Inclui depósito em juízo (processo apartamento).", icon="💰")
 
     st.subheader(":material/savings: Onde podem economizar")
 
