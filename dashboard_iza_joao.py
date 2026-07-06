@@ -347,6 +347,12 @@ def load_data(file_path=None, uploaded_file=None):
     dup_cdc = (_d.str.contains('INSTALLMENT') & _d.str.contains('EMPRESTIMO')) | (_d == 'EMPRESTIMO CDC')
     df = df[~dup_cdc].reset_index(drop=True)
 
+    # Open Finance tambem classifica aplicacoes ("Aplicacao: CDB/LCI...") como EXPENSE.
+    # Aporte nao e despesa: reclassifica pra INVESTMENT automaticamente.
+    _d2 = df['Descrição'].fillna('').str.upper().str.strip()
+    mask_aplic = (_d2.str.startswith('APLICACAO') | _d2.str.startswith('APLICAÇÃO')) & (df['Tipo'] == 'EXPENSE')
+    df.loc[mask_aplic, 'Tipo'] = 'INVESTMENT'
+
     # DEBT = dívida — virar EXPENSE e forçar categoria Dividas
     mask_debt = df['Tipo'] == 'DEBT'
     df.loc[mask_debt, 'Categoria'] = 'Dividas'
