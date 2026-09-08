@@ -617,7 +617,7 @@ meses_disponiveis = sorted(df['Ano_Mes'].unique())
 if pagina == "patrimonio":
     st.subheader(":material/account_balance: Patrimônio total — onde está o dinheiro de vocês?")
     st.caption("Foto do que vocês têm em cada conta ao longo do tempo. Esta é a verdade do que sobrou de fato.")
-    st.caption("📅 08/09: Investimentos = posição REAL na XP (R$ 129.878, extrato de 08/09) — portabilidade do Inter pra XP concluída. Caixa PJ e BB zeram a conta por varredura automática; o valor da Caixa é o mínimo conhecido aplicado no fundo automático (R$ 40.530 aplicados em 28/08 menos R$ 21.365 resgatados). Inter CC de 01/09 e Inter PJ de 06/09.")
+    st.caption("📅 08/09 (Open Finance do dia + extratos): XP R$ 129.878 (posição real, portabilidade concluída) · BB R$ 12.808 · Caixa PJ R$ 200 em conta + R$ 19.165 no fundo automático (a conta zera por varredura) · Inter Iza R$ 12.002 (extrato 01/09 — o Open Finance do Inter no Planfi está parado desde fev!) · Inter PJ R$ 16.923 · InfinitePay R$ 13.664 (entrou no quadro em set). Nubank ~R$ 525 fora do quadro.")
 
     # Saldos REAIS dos extratos (atualizar conforme novos extratos)
     # Use 0 quando nao tiver dado (ao inves de None) pra evitar NaN nos calculos
@@ -633,13 +633,17 @@ if pagina == "patrimonio":
         # 30/06 (extratos reais): Caixa PJ 30/06 (67.059,63), BB 30/06 (725,35), Inter CC 26/06 (579,17), Inter PJ 29/06 (13.880,43).
         # Investimentos = print abr (99.693) + aportes jun (7k+8k), sem rendimento (estimado).
         {"Data": "30/06/2026", "PJ Caixa": 67060, "BB CC": 725, "Inter CC": 579, "Investimentos": 114693, "Inter PJ Nova": 13880},
-        # 08/09: Investimentos = POSICAO REAL XP (PosicaoDetalhada 08/09, conta 19688148) - portabilidade
-        # do Inter p/ XP concluida. PJ Caixa = minimo conhecido no fundo automatico (aplicou 40.530 em
-        # 28/08, resgatou 21.365 em 31/08; conta corrente zera por varredura). BB zerado em 31/08.
-        # Inter CC 01/09, Inter PJ 06/09 (extratos).
-        {"Data": "08/09/2026", "PJ Caixa": 19165, "BB CC": 0, "Inter CC": 12002, "Investimentos": 129878, "Inter PJ Nova": 16923},
+        # 08/09 (Planfi Open Finance do dia + extratos da pasta set.2026):
+        # - Investimentos = POSICAO REAL XP 129.878 (PosicaoDetalhada 08/09, conta 19688148); portabilidade Inter->XP concluida
+        # - BB 12.808 (OF 08/09 09:53) | Caixa PJ = 200 em conta (OF 08/09) + 19.165 no fundo automatico
+        #   (aplicou 40.530 em 28/08, resgatou 21.365 em 31/08; conta zera por varredura)
+        # - Inter CC 12.002 (extrato 01/09; OF do Inter no Planfi esta PARADO desde 06/02, mostrava 4.376)
+        # - Inter PJ 16.923 (extrato 06/09) | InfinitePay 13.664 (OF 08/09; entrou no quadro em set/26)
+        # - Nubank Joao ~R$ 525 fora do quadro (imaterial)
+        {"Data": "08/09/2026", "PJ Caixa": 19365, "BB CC": 12808, "Inter CC": 12002, "Investimentos": 129878, "Inter PJ Nova": 16923, "InfinitePay": 13664},
     ])
-    saldos["TOTAL"] = saldos[["PJ Caixa", "BB CC", "Inter CC", "Investimentos", "Inter PJ Nova"]].sum(axis=1)
+    saldos["InfinitePay"] = saldos.get("InfinitePay", pd.Series([0]*len(saldos))).fillna(0)
+    saldos["TOTAL"] = saldos[["PJ Caixa", "BB CC", "Inter CC", "Investimentos", "Inter PJ Nova", "InfinitePay"]].sum(axis=1)
 
     # ───── CARDS GRANDES NO TOPO ─────
     inicio = saldos.iloc[0]
@@ -716,9 +720,10 @@ if pagina == "patrimonio":
         "BB CC": "#fdcb6e",
         "Inter CC": "#74b9ff",
         "Inter PJ Nova": "#fd79a8",
+        "InfinitePay": "#00b8d9",
     }
 
-    for conta in ["Investimentos", "PJ Caixa", "BB CC", "Inter CC", "Inter PJ Nova"]:
+    for conta in ["Investimentos", "PJ Caixa", "BB CC", "Inter CC", "Inter PJ Nova", "InfinitePay"]:
         fig_evol.add_trace(go.Bar(
             name=conta,
             x=saldos_plot["Data"],
