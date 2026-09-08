@@ -319,7 +319,7 @@ def get_categoria_mae(cat):
 # LOAD DATA
 # ============================================================
 @st.cache_data(ttl=30)
-def load_data(file_path=None, uploaded_file=None):
+def load_data(file_path=None, uploaded_file=None, receita_prevista=None):
     if uploaded_file is not None:
         df = pd.read_csv(uploaded_file, encoding='utf-8')
     elif file_path and os.path.exists(file_path):
@@ -398,11 +398,11 @@ def load_data(file_path=None, uploaded_file=None):
     df['Tipo_Despesa'] = df['Categoria'].apply(classificar_tipo_despesa)
     df['Categoria_Mae'] = df['Categoria'].apply(get_categoria_mae)
 
-    df = gerar_projecao(df)
+    df = gerar_projecao(df, receita_prevista)
     return df
 
 
-def gerar_projecao(df):
+def gerar_projecao(df, receita_prevista=None):
     todos_meses = sorted(df['Ano_Mes'].unique())
     # BUG FIX: usar mes ATUAL do calendario, NAO o ultimo do CSV
     # (CSV pode ter parcelas agendadas em meses futuros que nao sao "passado")
@@ -441,25 +441,27 @@ def gerar_projecao(df):
 
     rows = []
     for mes in meses_futuros:
-        # Receitas: projeção - já recebido (RECEITAS EVENTUAIS NAO PROJETAM)
-        for cat, val in media_rec_cat.items():
-            # Pular categorias eventuais (ressarcimento governo, caucao apt, etc)
-            if classificar_tipo_despesa(cat) == 'Eventual':
-                continue
-            ja_recebido = rec_real_por_mes_cat.get(mes, {}).get(cat, 0)
-            restante = max(0, (val * 0.95) - ja_recebido)
-            if restante <= 0:
-                continue
+        # Receitas: projecao pelo TOTAL do mes menos TUDO que ja entrou (qualquer categoria).
+        # Antes era categoria a categoria, mas se um recebimento entra com categoria
+        # diferente da media (ex.: TED do plantao lancado como "Variavel/Consultorio"),
+        # a projecao nao descontava e a receita contava DUAS vezes.
+        previsto_mes = sum(val * 0.95 for cat, val in media_rec_cat.items()
+                           if classificar_tipo_despesa(cat) != 'Eventual')
+        if mes == mes_vigente and receita_prevista is not None:
+            previsto_mes = max(0, receita_prevista)
+        ja_recebido_total = sum(rec_real_por_mes_cat.get(mes, {}).values())
+        restante_rec = max(0, previsto_mes - ja_recebido_total)
+        if restante_rec > 0:
             rows.append({
                 'Data': f'01/{mes[5:7]}/{mes[:4]}',
                 'Tipo': 'INCOME',
-                'Valor': f'R$ {restante:,.2f}',
-                'Valor_num': restante,
-                'Descrição': f'[Projeção] {cat}',
-                'Categoria': cat,
+                'Valor': f'R$ {restante_rec:,.2f}',
+                'Valor_num': restante_rec,
+                'Descrição': '[Projeção] Receita prevista (restante do mês)',
+                'Categoria': 'Renda Geral',
                 'Conta': 'Projeção',
                 'Tipo_Despesa': 'Outros',
-                'Categoria_Mae': get_categoria_mae(cat),
+                'Categoria_Mae': get_categoria_mae('Renda Geral'),
                 'Data_parsed': pd.to_datetime(f'{mes}-01'),
                 'Ano_Mes': mes,
                 'Recorrente': 'Não', 'Status': 'PROJECTED',
@@ -568,10 +570,19 @@ with st.sidebar:
         default_csv = os.path.join(pasta, "transacoes_filtradas_2026-04-08_19-22_Planfi_2026.csv")
     uploaded = st.file_uploader(":material/upload_file: Carregar novo CSV", type=['csv'])
 
+    with st.expander(":material/tune: Ajustar projeção do mês atual"):
+        receita_prev_input = st.number_input(
+            "Receita prevista para o mês atual (R$)",
+            min_value=0.0, value=0.0, step=1000.0, format="%.0f",
+            help="0 = automático (média dos últimos 6 meses). Se preencher, a projeção do mês "
+                 "usa esse total e desconta o que já entrou, em qualquer categoria.")
+        zerar_proj_rec = st.checkbox("Não projetar receita neste mês (mostrar só o que já entrou)")
+    receita_prev = -1.0 if zerar_proj_rec else (receita_prev_input if receita_prev_input > 0 else None)
+
     if uploaded:
-        df = load_data(uploaded_file=uploaded)
+        df = load_data(uploaded_file=uploaded, receita_prevista=receita_prev)
     else:
-        df = load_data(file_path=default_csv)
+        df = load_data(file_path=default_csv, receita_prevista=receita_prev)
 
     if df is None:
         st.error("Nenhum CSV encontrado.", icon="🔴")
@@ -606,30 +617,35 @@ meses_disponiveis = sorted(df['Ano_Mes'].unique())
 if pagina == "patrimonio":
     st.subheader(":material/account_balance: Patrimônio total — onde está o dinheiro de vocês?")
     st.caption("Foto do que vocês têm em cada conta ao longo do tempo. Esta é a verdade do que sobrou de fato.")
-    st.caption("📅 30/06: todos os saldos vêm de extratos reais (Caixa PJ, BB, Inter CC, Inter PJ). A reserva Inter Investimentos é estimada: print de abril (R$ 99.693) + aportes de junho (R$ 15k), sem contar rendimento.")
+    st.caption("📅 08/09: Investimentos = posição REAL na XP (R$ 129.878, extrato de 08/09) — portabilidade do Inter pra XP concluída. Caixa PJ e BB zeram a conta por varredura automática; o valor da Caixa é o mínimo conhecido aplicado no fundo automático (R$ 40.530 aplicados em 28/08 menos R$ 21.365 resgatados). Inter CC de 01/09 e Inter PJ de 06/09.")
 
     # Saldos REAIS dos extratos (atualizar conforme novos extratos)
     # Use 0 quando nao tiver dado (ao inves de None) pra evitar NaN nos calculos
     # Pegar SEMPRE o ultimo saldo conhecido pra cada conta
     saldos = pd.DataFrame([
-        # ordem: PJ Caixa, BB CC, Inter CC, Inter Investimentos, Inter PJ nova
-        {"Data": "01/01/2026", "PJ Caixa": 71548, "BB CC": 2229, "Inter CC": 4943, "Inter Investimentos": 49000, "Inter PJ Nova": 0},
-        {"Data": "31/01/2026", "PJ Caixa": 47059, "BB CC": 9454, "Inter CC": 6002, "Inter Investimentos": 71121, "Inter PJ Nova": 0},
-        {"Data": "28/02/2026", "PJ Caixa": 68165, "BB CC": 7046, "Inter CC": 712, "Inter Investimentos": 80000, "Inter PJ Nova": 0},
-        {"Data": "31/03/2026", "PJ Caixa": 34201, "BB CC": 13063, "Inter CC": 53, "Inter Investimentos": 95000, "Inter PJ Nova": 4840},
+        # ordem: PJ Caixa, BB CC, Inter CC, Investimentos, Inter PJ nova
+        {"Data": "01/01/2026", "PJ Caixa": 71548, "BB CC": 2229, "Inter CC": 4943, "Investimentos": 49000, "Inter PJ Nova": 0},
+        {"Data": "31/01/2026", "PJ Caixa": 47059, "BB CC": 9454, "Inter CC": 6002, "Investimentos": 71121, "Inter PJ Nova": 0},
+        {"Data": "28/02/2026", "PJ Caixa": 68165, "BB CC": 7046, "Inter CC": 712, "Investimentos": 80000, "Inter PJ Nova": 0},
+        {"Data": "31/03/2026", "PJ Caixa": 34201, "BB CC": 13063, "Inter CC": 53, "Investimentos": 95000, "Inter PJ Nova": 4840},
         # Abril: PJ Caixa so temos ate 09/04 (R$ 9.572). Inter PJ nova nao temos dado novo - usa o de 31/03
-        {"Data": "30/04/2026", "PJ Caixa": 9572, "BB CC": 8624, "Inter CC": 471, "Inter Investimentos": 99693, "Inter PJ Nova": 4840},
+        {"Data": "30/04/2026", "PJ Caixa": 9572, "BB CC": 8624, "Inter CC": 471, "Investimentos": 99693, "Inter PJ Nova": 4840},
         # 30/06 (extratos reais): Caixa PJ 30/06 (67.059,63), BB 30/06 (725,35), Inter CC 26/06 (579,17), Inter PJ 29/06 (13.880,43).
-        # Inter Investimentos = print abr (99.693) + aportes jun (7k+8k), sem rendimento (estimado).
-        {"Data": "30/06/2026", "PJ Caixa": 67060, "BB CC": 725, "Inter CC": 579, "Inter Investimentos": 114693, "Inter PJ Nova": 13880},
+        # Investimentos = print abr (99.693) + aportes jun (7k+8k), sem rendimento (estimado).
+        {"Data": "30/06/2026", "PJ Caixa": 67060, "BB CC": 725, "Inter CC": 579, "Investimentos": 114693, "Inter PJ Nova": 13880},
+        # 08/09: Investimentos = POSICAO REAL XP (PosicaoDetalhada 08/09, conta 19688148) - portabilidade
+        # do Inter p/ XP concluida. PJ Caixa = minimo conhecido no fundo automatico (aplicou 40.530 em
+        # 28/08, resgatou 21.365 em 31/08; conta corrente zera por varredura). BB zerado em 31/08.
+        # Inter CC 01/09, Inter PJ 06/09 (extratos).
+        {"Data": "08/09/2026", "PJ Caixa": 19165, "BB CC": 0, "Inter CC": 12002, "Investimentos": 129878, "Inter PJ Nova": 16923},
     ])
-    saldos["TOTAL"] = saldos[["PJ Caixa", "BB CC", "Inter CC", "Inter Investimentos", "Inter PJ Nova"]].sum(axis=1)
+    saldos["TOTAL"] = saldos[["PJ Caixa", "BB CC", "Inter CC", "Investimentos", "Inter PJ Nova"]].sum(axis=1)
 
     # ───── CARDS GRANDES NO TOPO ─────
     inicio = saldos.iloc[0]
     atual = saldos.iloc[-1]
     var_total = atual["TOTAL"] - inicio["TOTAL"]
-    var_inv = atual["Inter Investimentos"] - inicio["Inter Investimentos"]
+    var_inv = atual["Investimentos"] - inicio["Investimentos"]
     var_pj = atual["PJ Caixa"] - inicio["PJ Caixa"]
     var_cc = (atual["PJ Caixa"] + atual["BB CC"] + atual["Inter CC"]) - (inicio["PJ Caixa"] + inicio["BB CC"] + inicio["Inter CC"])
 
@@ -655,8 +671,8 @@ if pagina == "patrimonio":
     with col_c:
         st.markdown(card_html(
             "#6c5ce7", "rgba(108,92,231,0.35)",
-            "📊", "Reserva (CDB/LCI)",
-            fmt_brl(atual["Inter Investimentos"]),
+            "📊", "Reserva investida (XP)",
+            fmt_brl(atual["Investimentos"]),
             f'<div style="margin-top:14px; font-size:1rem;">+{fmt_brl(var_inv)} (cresceu)</div>'
         ), unsafe_allow_html=True)
 
@@ -695,14 +711,14 @@ if pagina == "patrimonio":
 
     fig_evol = go.Figure()
     cores_contas = {
-        "Inter Investimentos": "#6c5ce7",
+        "Investimentos": "#6c5ce7",
         "PJ Caixa": "#00b894",
         "BB CC": "#fdcb6e",
         "Inter CC": "#74b9ff",
         "Inter PJ Nova": "#fd79a8",
     }
 
-    for conta in ["Inter Investimentos", "PJ Caixa", "BB CC", "Inter CC", "Inter PJ Nova"]:
+    for conta in ["Investimentos", "PJ Caixa", "BB CC", "Inter CC", "Inter PJ Nova"]:
         fig_evol.add_trace(go.Bar(
             name=conta,
             x=saldos_plot["Data"],
@@ -744,7 +760,7 @@ if pagina == "patrimonio":
     st.subheader(":material/table_view: Saldos detalhados por conta")
 
     saldos_show = saldos.copy()
-    for c in ["PJ Caixa", "BB CC", "Inter CC", "Inter Investimentos", "Inter PJ Nova", "TOTAL"]:
+    for c in ["PJ Caixa", "BB CC", "Inter CC", "Investimentos", "Inter PJ Nova", "TOTAL"]:
         saldos_show[c] = saldos_show[c].apply(lambda v: fmt_brl(v) if pd.notna(v) else "—")
 
     st.dataframe(saldos_show, use_container_width=True, hide_index=True)
@@ -766,9 +782,9 @@ if pagina == "patrimonio":
         {"Conta": "💜 Inter CC (Iza)", "Início (jan)": fmt_brl(inicio["Inter CC"]),
          "Hoje (último saldo)": fmt_brl(atual["Inter CC"]),
          "Variação": fmt_var(atual["Inter CC"] - inicio["Inter CC"])},
-        {"Conta": "📊 Inter Investimentos", "Início (jan)": fmt_brl(inicio["Inter Investimentos"]),
-         "Hoje (último saldo)": fmt_brl(atual["Inter Investimentos"]),
-         "Variação": fmt_var(atual["Inter Investimentos"] - inicio["Inter Investimentos"])},
+        {"Conta": "📊 Investimentos", "Início (jan)": fmt_brl(inicio["Investimentos"]),
+         "Hoje (último saldo)": fmt_brl(atual["Investimentos"]),
+         "Variação": fmt_var(atual["Investimentos"] - inicio["Investimentos"])},
         {"Conta": "🆕 Inter PJ Nova (Porto Belo)", "Início (jan)": fmt_brl(inicio["Inter PJ Nova"]),
          "Hoje (último saldo)": fmt_brl(atual["Inter PJ Nova"]),
          "Variação": fmt_var(atual["Inter PJ Nova"] - inicio["Inter PJ Nova"])},
@@ -785,7 +801,7 @@ if pagina == "patrimonio":
     with col_h1:
         with st.container(border=True):
             st.markdown("### 1️⃣ A reserva CRESCEU ✅")
-            st.markdown(f"**De {fmt_brl(inicio['Inter Investimentos'])} → {fmt_brl(atual['Inter Investimentos'])}**")
+            st.markdown(f"**De {fmt_brl(inicio['Investimentos'])} → {fmt_brl(atual['Investimentos'])}**")
             st.markdown(f"<div style='font-size:1.8rem; font-weight:800; color:#00b894;'>+{fmt_brl(var_inv)}</div>", unsafe_allow_html=True)
             st.caption("Aportes em CDB e LCI no Inter (em 4 meses)")
     with col_h2:
@@ -1647,7 +1663,7 @@ elif pagina == "alertas":
     st.error("**💸 Dívidas mensais fixas atuais: R$ 14.861** (CDC BB R$ 3.672 + Aparelho US Santander R$ 2.590 + Empréstimo Cartão Caixa Elo R$ 3.710 + FIES R$ 4.889)\n\n📅 **Cronograma de alívio:**\n- **Ago/26**: CDC BB acaba → -R$ 3.672/mês (fica R$ 11.189)\n- **Out/26**: Cartão Caixa acaba → -R$ 3.710/mês (fica R$ 7.479)\n- **Ago/27**: FIES acaba → -R$ 4.889/mês (fica R$ 2.590, só Aparelho US)\n\n📌 **A confirmar com a Iza:** saldo devedor + prazo do financiamento do Aparelho US (Santander)", icon="🚨")
 
     # ── INVESTIMENTOS / RESERVA ──
-    st.subheader(":material/savings: Investimentos e Reserva (Inter)")
+    st.subheader(":material/savings: Investimentos e Reserva (XP)")
     st.markdown("**Histórico de aportes em 2026**")
     st.dataframe(
         pd.DataFrame([
@@ -1666,13 +1682,13 @@ elif pagina == "alertas":
 
     col_inv1, col_inv2, col_inv3 = st.columns(3)
     with col_inv1:
-        st.metric("Total aplicado", "R$ 66.400", "+R$ 15.000 em jun/26 (CDB 7k + 8k)", border=True)
+        st.metric("Aportes no ano", "R$ 75.400", "inclui previdências jul/ago (R$ 4,5k/mês)", border=True)
     with col_inv2:
-        st.metric("Reserva atual (jun)", "R$ 114.693", "estimado: print abr + aportes jun 15k", border=True)
+        st.metric("Reserva na XP (08/09)", "R$ 129.878", "posição real — 100% pós-fixado", border=True)
     with col_inv3:
         st.metric("Crescimento patrimônio", "~R$ 50k", "vs dez/25 (~R$ 50k)", border=True)
 
-    st.info("📊 **Reserva mais que dobrou: de ~R$ 50k para ~R$ 115k** (jan-jun/2026). Aportes desaceleraram em abr (R$ 3k), **zeraram em maio** e **retomaram forte em jun com R$ 15k** (CDB 7k + 8k). Inclui depósito em juízo (processo apartamento).", icon="💰")
+    st.info("📊 **Reserva saiu de ~R$ 50k (jan) para R$ 129,9k (set)** e agora está **centralizada na XP** (portabilidade do Inter concluída em ago/26): BNP Match RF R$ 124,8k + Trend Cash R$ 5,1k, 100% pós-fixado. Meta: R$ 220k até jul/2027 (reserva + maternidade). Previdências VGBL debitando R$ 4,5k/mês desde jul.", icon="💰")
 
     st.subheader(":material/savings: Onde podem economizar")
 
