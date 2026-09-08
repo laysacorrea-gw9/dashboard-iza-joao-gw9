@@ -349,8 +349,15 @@ def load_data(file_path=None, uploaded_file=None):
 
     # Open Finance tambem classifica aplicacoes ("Aplicacao: CDB/LCI...") como EXPENSE.
     # Aporte nao e despesa: reclassifica pra INVESTMENT automaticamente.
+    # Idem previdencias (MENSALID SEGURO SUL AMERICA S PREVIDENCIA veio EXPENSE em ago/26)
+    # e qualquer lancamento que a propria Laysa categorizou como "Investimentos".
     _d2 = df['Descrição'].fillna('').str.upper().str.strip()
-    mask_aplic = (_d2.str.startswith('APLICACAO') | _d2.str.startswith('APLICAÇÃO')) & (df['Tipo'] == 'EXPENSE')
+    _cat2 = df['Categoria'].fillna('').str.upper().str.strip()
+    mask_aplic = (
+        _d2.str.startswith('APLICACAO') | _d2.str.startswith('APLICAÇÃO')
+        | _d2.str.contains('PREVIDENCIA') | _d2.str.contains('PREVIDÊNCIA')
+        | (_cat2 == 'INVESTIMENTOS')
+    ) & (df['Tipo'] == 'EXPENSE')
     df.loc[mask_aplic, 'Tipo'] = 'INVESTMENT'
 
     # DEBT = dívida — virar EXPENSE e forçar categoria Dividas
